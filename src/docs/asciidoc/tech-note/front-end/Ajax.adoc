@@ -1,0 +1,84 @@
+= AJAX Introduction
+劉育辰 <torr@tist.com.tw>
+v0.1, 2019-09-10
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: Topic
+:sectanchors:
+
+==  What is AJAX?
+Asynchronous JavaScript And XML, AJAX
+
+* XMLHttpRequest 
+** be used to exchange data with a web server behind the scenes.
+* JavaScript and HTML DOM
+** update parts of a web page, without reloading the whole page.
+* https://www.w3schools.com/xml/default.asp[XML] and 
+https://www.w3schools.com/js/js_json_intro.asp[JSON]
+
+WARNING: Access Across Domains +
+means both the web page and the XML file it tries to load, must be located on the same server. +
+-> CORS
+
+
+== AJAX in JavaScript
+* Create https://www.w3schools.com/js/js_ajax_http.asp[XMLHttpRequest] Object
+[source]
+ var xhr = new XMLHttpRequest();
+
+* Send XMLHttpRequest
+[source]
+xhr.open(method, url, async);
+xhr.send()
+
+** method -> GET/POST
+** url -> location
+** async +
+    -> true: asynchronous (default) +
+    -> false: synchronous
+
+* Get Response
+[source]
+xhr.responseText;
+
+* Handling Your Data
+[source]
+xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("demo").innerHTML = this.responseText;
+    }
+};
+
+== AJAX in jQuery 
+
+* https://www.w3schools.com/jquery/ajax_ajax.asp[$.ajax()]
+
+[source]
+$.ajax({
+    type: "post",
+    url: com.tist.BASE_URL + "/people/member/register/docheckphone",
+    data: {phone: phoneNumber},
+    success: function (msg) {
+      if (msg) {
+        // $sendMessageBtn.removeAttr('disabled');
+        $mobileError.removeClass('text-danger');
+        $mobileError.addClass('text-success');
+        $mobileError.text('可以使用，請再次確認此號碼能接收簡訊');
+      } else {
+        // $sendMessageBtn.attr('disabled', 'disables');
+        $("#mobile").val('');
+        $mobileError.removeClass('text-success');
+        $mobileError.addClass('text-danger');
+        $mobileError.text('此行動電話已使用過，請重新輸入');
+      }
+    },
+    error: function (xhr, status, e) {
+      console.log(e);
+    }
+  })
+
+== Conclusion
+* Advantage & Disadvantage
+* Notice

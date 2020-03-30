@@ -1,0 +1,301 @@
+= Dependency Injection 依賴注入
+劉育辰 <torr@tist.com.tw>
+v2.0, 2019-12-06
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+== Inversion of Control (IoC)
+* 一種設計原則
+* 藉由 『分離組件 (Components) 的設置與使用』來降低程式之間的耦合度
+* 實例依賴物件的控制流程(Control Flow)，由主動變成被動。
+
+.技術描述
+****
+Class A中用到了Class B的物件b，一般情況下，需要在A的代碼中顯式的new一個B的物件。
+
+採用依賴注入技術之後，A的代碼只需要定義一個私有的B物件，不需要直接new來獲得這個物件，而是通過相關的容器控制程式來將B物件在外部new出來並注入到A類里的參照中。而具體取得的方法、物件被取得時的狀態其他程式來指定。
+
+舉個例子: +
+需要的 遊戲，不用自己 下載，而是 網咖提供 給你。 +
+　　　　　　　　　　　　|| +
+需要的 物件，不用自己 取得，而是 服務容器 提供 給你。 +
+　　　　　　　　　　　　|| +
+需要的 依賴實例，不用 主動 (Active) 建立，而是 被動 (Passive) 接收。
+****
+
+== Dependency Injection (DI)
+2000 年初，Martin Fowler與多位 IoC 提倡者，給予其實作方式一個更具體的名稱 +
+"Dependency Injection (依賴注入)"。
+
+[IMPORTANT]
+Dependency Injection是實現 IoC 的一種方式， +
+但不代表 IoC 就是 Dependency Injection
+
+顧名思義：將所需要依賴的實例，注入到高階模組(Caller)中。 +
+注入方式有三種： +
+
+. 建構子注入 (Constructor Injection)
+. 設值方法注入 (Setter Injection)
+. 介面注入 (Interface Injection)
+
+// Example
+.不良示範
+[source]
+--
+public class Programer {
+    
+    private DevelopTool developTool = new Idea();
+    
+    public void coding(){
+        developTool.compile();
+    }
+    
+}
+--
+
+.較好寫法
+[source]
+--
+public class Programer implements Engineer {
+
+    public Programer() {
+    }
+
+    // Constructor Injection
+    public Programer(DevelopTool developTool) {
+        this.developTool = developTool;
+    }
+
+    private DevelopTool developTool;
+
+    public DevelopTool getDevelopTool() {
+        return developTool;
+    }
+    
+    // Setter Injection
+    public void setDevelopTool(DevelopTool developTool) {
+        this.developTool = developTool;
+    }
+
+    // Interface Injection
+    @Override
+    public void injectDevelopTool(DevelopTool developTool) {
+        this.developTool = developTool;
+    }
+
+    public void coding() {
+        if (developTool != null) {
+            developTool.compile();
+        } else {
+            System.out.println("你還沒有開發工具");
+        }
+    }
+
+}
+
+
+public interface Engineer {
+
+    void injectDevelopTool(DevelopTool developTool);
+
+}
+--
+
+[quote, Martin Fowler]
+It’s important to support both mechanisms, even if there’s a preference for one of them. +
+(即使你有較偏好的選擇，同時支持這兩種機制都是必要的。)
+
+== @Resource V.S. @Autowired
+[cols="1,2,2"]
+|===
+^|項目 ^|@Resource ^|@Autowired
+
+^|package
+|javax.annotation.Resource + 
+    (JDK 1.6)
+|org.springframework
+    .beans.factory.annotation.Autowired
+
+^|標註
+|@Target({TYPE, FIELD, METHOD}) +
+    @Retention(RUNTIME)
+|@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE}) +
+@Retention(RetentionPolicy.RUNTIME) +
+@Documented
+
+^|Annotation屬性
+m|String name(); +
+    Class<?> type();
+m|boolean required();
+
+^|default mode
+|byName +
+    找不到與名稱相符的bean時才會按照類型進行注入
+|byType +
+    要求依賴對象必須存在 +
+    可搭配@Qualifier("beanName") 使用名稱注入
+
+^|使用方式 
+2+^| 都可以寫在 Field 或該Field 的Setter方法上 +
+    都可以達到自動注入的效果
+
+|===
+
+.舉個例子
+****
+
+.JavaCode如下
+[source]
+--
+@Resource
+PersonService p;
+--
+
+@Resource 注入過程： +
+1. 查找配置文件(xml)中是否有id 為 p 的元素 +
+2. 若沒有，再看看@Resource 是否有指定name 屬性 +
+3. 沒有指定name 就依照PersonService 類型下去尋找 +
+
+
+.如果是這樣呢?
+[source]
+--
+@Autowired
+PersonService p;
+--
+
+****
+
+
+== Spring Bean
+In Spring, the objects that form the backbone of your application and that are managed by the Spring IoC container are called beans.
+
+A bean is an object that is instantiated, assembled, and otherwise managed by a Spring IoC container.
+
+=== Spring IoC Container
+Spring IoC容器會讀取 Configuration Metadata 來取得要管理哪些Bean的資訊
+
+Configuration Metadata 有三種表示法：
+
+. XML 文件
+. Java Annotation
+. Java Code
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <!-- Definition for student bean -->
+   <bean id="student" class="com.yiibai.Student">
+      <property name="name"  value="Torr" />
+      <property name="age"  value="2019"/>
+   </bean>
+
+</beans>
+--
+
+.Class部分
+[source]
+--
+
+public class Student {
+   private Integer age;
+   private String name;
+
+   @Required
+   public void setAge(Integer age) {
+      this.age = age;
+   }
+   public Integer getAge() {
+      return age;
+   }
+
+   @Required
+   public void setName(String name) {
+      this.name = name;
+   }
+   public String getName() {
+      return name;
+   }
+}
+
+public class MainApp {
+   public static void main(String[] args) {
+      ApplicationContext context = 
+             new ClassPathXmlApplicationContext("Beans.xml");
+
+      Student student = (Student) context.getBean("student");
+
+      System.out.println("Name : " + student.getName() );
+      System.out.println("Age : " + student.getAge() );
+   }
+}
+--
+
+[NOTE]
+--
+Annotation injection is performed before XML injection. Thus, the XML configuration overrides the annotations for properties wired through both approaches.
+--
+
+=== Become a Spring Bean
+
+定義一個Bean 需要描述這個Bean 的以下屬性：
+
+* A package-qualified class name
+* Behavioral configuration(scope, lifecycle callbacks, and so forth).
+* References to other beans
+* Other configuration in the newly created object(the number of connections)
+
+=== Spring boot
+Spring boot 簡化了Spring 應用程式的開發 +
+使用了大量的Annotation 來取代繁瑣的XML
+
+.@Bean and @Configuration
+[source]
+--
+@Configuration
+public class AppConfig { 
+
+    @Bean 
+    public MyService myService() {  
+        return new MyServiceImpl();
+    }
+}
+--
+
+The preceding AppConfig class is equivalent to the following Spring <beans/> XML:
+
+[source]
+--
+<beans>
+    <bean id="myService" class="com.acme.services.MyServiceImpl"/>
+</beans>
+--
+
+.常用來成為Spring Bean 的註解
+* @Component
+* @Service
+* @Repositpry
+* @Controller
+* @RestController
+
+== 延伸閱讀
+* Dependency-Inversion Principle (依賴反轉原則)
+* SOLID (OOP 5 Principles)
+* Spring IoC
+

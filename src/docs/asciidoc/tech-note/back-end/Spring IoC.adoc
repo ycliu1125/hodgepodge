@@ -1,0 +1,1661 @@
+= Spring IoC
+劉育辰 <torr@tist.com.tw>
+v1.6, 2019-12-06
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+== What is IoC (Inversion of Control)
+* 一種設計原則
+* 目的是降低程式之間的耦合度
+* 實例依賴物件的控制流程 (Control Flow)，由主動變成被動。
+
+.技術描述
+****
+Class A中用到了Class B的物件b，一般情況下，需要在A的代碼中顯式的new一個B的物件。
+
+採用依賴注入技術之後，A的代碼只需要定義一個私有的B物件，不需要直接new來獲得這個物件，而是通過相關的容器控制程式來將B物件在外部new出來並注入到A類里的參照中。而具體取得的方法、物件被取得時的狀態其他程式來指定。
+
+舉個例子: +
+需要的 遊戲，不用自己 下載，而是 網咖提供 給你。 +
+　　　　　　　　　　　　|| +
+需要的 物件，不用自己 取得，而是 服務容器 提供 給你。 +
+　　　　　　　　　　　　|| +
+需要的 依賴實例，不用 主動 (Active) 建立，而是 被動 (Passive) 接收。
+****
+
+=== Dependency Inject (DI)
+* 被動接收"要依賴的"物件
+* 建構子、Setter
+* 實作介面、抽象類別
+* Annotation
+
+=== Dependency Lookup
+* 主動尋找"要依賴的"物件
+* 在需要的時候通過呼叫方法來取得物件，取得時提供相關的參數來確定取得物件的狀態
+
+== Spring IoC Container
+* 又稱：服務容器 Service Container
+* 實例化、配置及組裝元件，透過依賴注入(Dependency Injection)，提供服務給模組的地方。
+* 容器會讀取 Configuration Metadata 來取得要管理哪些Bean
+* Configuration Metadata 有三種表示法：
+    . XML 文件
+    . Java Annotation
+    . Java Code
+
+//Spring 提供的基本IoC 容器
+=== org.springframework.beans
+* Interface BeanFactory
+* 最簡單的容器DI提供基本的支持和定義
+
+[source]
+--
+GenericApplicationContext context = new GenericApplicationContext();
+new XmlBeanDefinitionReader(context).loadBeanDefinitions("services.xml", "daos.xml");
+--
+
+
+=== org.springframework.context
+* Interface ApplicationContext
+* 比Beans 添加了更多的企業特定的功能
+
+[source]
+--
+ApplicationContext context = new ClassPathXmlApplicationContext("services.xml", "daos.xml");
+ApplicationContext context = 
+    new FileSystemXmlApplicationContext("C:/Users/ZARA/workspace/HelloSpring/src/Beans.xml");
+--
+
+[NOTE]
+--
+You should use an ApplicationContext unless you have a good reason for not doing so.
+--
+
+|===
+| Feature | BeanFactory | ApplicationContext
+
+|Bean instantiation/wiring
+|Yes
+|Yes
+
+|Integrated lifecycle management
+|No
+|Yes
+
+|Automatic BeanPostProcessor registration
+|No
+|Yes
+
+|Automatic BeanFactoryPostProcessor registration
+|No
+|Yes
+
+|Convenient MessageSource access (for internalization)
+|No
+|Yes
+
+|Built-in ApplicationEvent publication mechanism
+|No
+|Yes
+
+|===
+
+
+== Bean
+In Spring, the objects that form the backbone of your application and that are managed by the Spring IoC container are called beans.
+
+A bean is an object that is instantiated, assembled, and otherwise managed by a Spring IoC container. 
+
+=== Bean Definition 
+
+定義一個Bean 需要描述這個Bean 的以下屬性：
+
+* A package-qualified class name
+* Behavioral configuration(scope, lifecycle callbacks, and so forth).
+* References to other beans
+* Other configuration in the newly created object(the number of connections)
+
+.The bean definition
+* Class
+* Name
+* Scope
+* Constructor arguments
+* Properties
+* Autowiring mode
+* Lazy initialization mode
+* Initialization method
+* Destruction method
+
+=== Bean Scopes
+
+.Bean Scopes
+* singleton (Default) +
+    single instance per Spring IoC container
+* prototype +
+    a single bean definition to have any number of object instances.
+* request
+* session
+* Properties
+* application
+* websocket
+
+=== Bean Lifecycle
+image::Spring Framework\Spring IoC\images\project-spring-bean-lifecycle-flowchart-architecture-guide-img1.jpg[]
+
+==== Initialization Callbacks
+實例化之後第一個被呼叫的方法 +
+兩種方式
+
+. implements InitializingBean 實作 afterPropertiesSet()
+. xml 配置 init-method 指定類別中void無參數方法名稱
+
+==== Destruction Callbacks
+銷毀Bean之前最後一個被呼叫的方法 +
+一樣兩種方式
+
+. implements DisposableBean 實作 destroy()
+. xml 配置 destroy-method 指定類別中void無參數方法名稱
+
+====
+If you use Spring’s IoC container in a non-web application environment (for example, in a rich client desktop environment), register a shutdown hook with the JVM. Doing so ensures a graceful shutdown and calls the relevant destroy methods on your singleton beans so that all resources are released. You must still configure and implement these destroy callbacks correctly. 
+
+To register a shutdown hook, call the registerShutdownHook() method that is declared on the ConfigurableApplicationContext interface.
+====
+建議不要使用InitializingBean或者DisposableBean的Callback， +
+因為XML配置提供相對靈活的方式，可自定義初始化、回收的方法。
+
+
+==== Default Initialization and Destroy Methods
+如果你有過多的Bean初始化和銷毀或者具有相同名稱的方法，不需要聲明的初始化方法和銷毀方法在每一個bean上。相反框架提供了靈活使用<beans>元素default-init-method和default-destroy-method 屬性如下配置這樣的情況：
+
+[source]
+--
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
+    default-init-method="init" 
+    default-destroy-method="destroy">
+
+   <bean id="..." class="...">
+       <!-- collaborators and configuration for this bean go here -->
+   </bean>
+
+</beans>
+--
+
+==== BeanPostProcessor 
+實作BeanPostProcessor 介面可以實現自定義的實例化邏輯，依賴解析邏輯等，也可以以後在Spring容器實例化完畢。 
+注意實作後是針對所有的IoC Bean 在每個Bean初始化前、後都會執行某部分程式。
+
+.Class部分
+[source]
+--
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.BeansException;
+
+public class InitXXX implements BeanPostProcessor {
+ 
+   public Object postProcessBeforeInitialization(Object bean,
+                 String beanName) throws BeansException {
+      System.out.println("BeforeInitialization : " + beanName);
+      return bean;  // you can return any other object as well
+   }
+
+   public Object postProcessAfterInitialization(Object bean,
+                 String beanName) throws BeansException {
+      System.out.println("AfterInitialization : " + beanName);
+      return bean;  // you can return any other object as well
+   }
+
+}
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="helloWorld" class="com.yiibai.HelloWorld"
+       init-method="init" destroy-method="destroy">
+       <property name="message" value="Hello World!"/>
+   </bean>
+
+   <bean class="com.yiibai.InitHelloWorld" />
+
+</beans>
+--
+
+=== Bean Definition Inheritance
+Spring Bean Definition的繼承與Java類的繼承無關，但概念是一樣的。
+
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="helloWorld" class="com.yiibai.HelloWorld">
+       <property name="message1" value="Hello World!"/>
+       <property name="message2" value="Hello Second World!"/>
+   </bean>
+
+   <bean id="helloIndia" class="com.yiibai.HelloIndia"
+       parent="helloWorld">
+       <property name="message1" value="Hello India!"/>
+       <property name="message3" value="Namaste India!"/>
+   </bean>
+
+</beans>
+--
+
+在撰寫Bean Definition模板時，父Bean不應指定具有實體的Class Bean，而是指定為抽象的。 +
+被標註為抽象的Bean，無法被實例化，完完全全被繼承用。
+
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="beanTeamplate" abstract="true">
+       <property name="message1" value="Hello World!"/>
+       <property name="message2" value="Hello Second World!"/>
+       <property name="message3" value="Namaste India!"/>
+   </bean>
+
+   <bean id="helloIndia" class="com.yiibai.HelloIndia"
+       parent="beanTeamplate">
+       <property name="message1" value="Hello India!"/>
+       <property name="message3" value="Namaste India!"/>
+   </bean>
+
+</beans>
+--
+
+== Spring Dependency Injection
+主要分為兩種
+
+. 建構子注入 (Constructor Injection)
+. 設值方法注入 (Setter Injection)
+
+
+=== Constructor Injection
+
+.Class部分
+[source]
+--
+public class TextEditor {
+   private SpellChecker spellChecker;
+
+   public TextEditor(SpellChecker spellChecker) {
+      System.out.println("Inside TextEditor constructor." );
+      this.spellChecker = spellChecker;
+   }
+   public void spellCheck() {
+      spellChecker.checkSpelling();
+   }
+}
+
+
+public class SpellChecker {
+   public SpellChecker(){
+      System.out.println("Inside SpellChecker constructor." );
+   }
+
+   public void checkSpelling() {
+      System.out.println("Inside checkSpelling." );
+   }
+}
+--
+
+.XML部分
+[source]
+--
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+      <constructor-arg ref="spellChecker"/>
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+.多參數建構子(照順序)
+[source]
+--
+package x.y;
+
+public class Foo {
+   public Foo(Bar bar, Baz baz) {
+      // ...
+   }
+}
+
+
+<beans>
+   <bean id="foo" class="x.y.Foo">
+      <constructor-arg ref="bar"/>
+      <constructor-arg ref="baz"/>
+   </bean>
+
+   <bean id="bar" class="x.y.Bar"/>
+   <bean id="baz" class="x.y.Baz"/>
+</beans>
+--
+
+.基本型態
+[source]
+--
+<beans>
+
+   <bean id="exampleBean" class="examples.ExampleBean">
+      <constructor-arg index="0" value="2001"/>
+      <constructor-arg index="1" value="Zara"/>
+   </bean>
+
+</beans>
+--
+
+=== Setter Injection
+基於setter DI由容器調用setter方法​​對bean調用無參數建構子或無參數static工廠方法實例化bean之後完成。
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+      <property name="spellChecker" ref="spellChecker"/>
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+=== Inner Beans
+承上例
+
+.XML 亦可寫成InnerBean形式
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean using inner bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+      <property name="spellChecker">
+         <bean id="spellChecker" class="com.yiibai.SpellChecker"/>
+       </property>
+   </bean>
+
+</beans>
+--
+
+
+[NOTE]
+--
+. 建構子注入 & Setter注入所使用的標籤不一樣，前者使用<constructor-arg>，後者則是<property>。
+. 如果注入的是一個"類別" 需使用 ref 屬性，如果是"一個值"，那麼應該使用value屬性。
+--
+
+=== Collections
+<list/>, <set/>, <map/>, 和 <props/> 這四個元素分別對應到Java Collection 的 List, Set, Map, 和 Properties。
+
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for javaCollection -->
+   <bean id="javaCollection" class="com.yiibai.JavaCollection">
+
+      <!-- results in a setAddressList(java.util.List) call -->
+      <property name="addressList">
+        <list>
+           <value>INDIA</value>
+           <value>Pakistan</value>
+           <value>USA</value>
+           <value>USA</value>
+        </list>
+      </property>
+
+     <!-- results in a setAddressSet(java.util.Set) call -->
+     <property name="addressSet">
+        <set>
+           <value>INDIA</value>
+           <value>Pakistan</value>
+           <value>USA</value>
+           <value>USA</value>
+        </set>
+      </property>
+
+     <!-- results in a setAddressMap(java.util.Map) call -->
+     <property name="addressMap">
+        <map>
+           <entry key="1" value="INDIA"/>
+           <entry key="2" value="Pakistan"/>
+           <entry key="3" value="USA"/>
+           <entry key="4" value="USA"/>
+        </map>
+      </property>
+
+     <!-- results in a setAddressProp(java.util.Properties) call -->
+     <property name="addressProp">
+        <props>
+           <prop key="one">INDIA</prop>
+           <prop key="two">Pakistan</prop>
+           <prop key="three">USA</prop>
+           <prop key="four">USA</prop>
+        </props>
+      </property>
+
+   </bean>
+
+</beans>
+--
+
+=== Null & Empty String
+
+[source]
+--
+<bean id="..." class="exampleBean">
+   <property name="email" value=""/>
+</bean>
+--
+等同於 exampleBean.setEmail("")
+
+[source]
+--
+<bean id="..." class="exampleBean">
+   <property name="email"><null/></property>
+</bean>
+--
+等同於 exampleBean.setEmail(null)
+
+[NOTE]
+--
+null 要用標籤設定
+--
+
+=== p-namespace
+p- property
+
+.標準XML配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="john-classic" class="com.example.Person">
+      <property name="name" value="John Doe"/>
+      <property name="spouse" ref="jane"/>
+   </bean>
+
+   <bean name="jane" class="com.example.Person">
+      <property name="name" value="John Doe"/>
+   </bean>
+
+</beans>
+--
+
+.p-namespace 配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="john-classic" class="com.example.Person"
+      p:name="John Doe"
+      p:spouse-ref="jane"/>
+   </bean>
+
+   <bean name="jane" class="com.example.Person"
+      p:name="John Doe"/>
+   </bean>
+
+</beans>
+--
+
+=== c-namespace
+c- constructor
+
+
+
+== Autowiring Collaborators
+
+=== Autowiring modes
+* no +
+(Default) No autowiring. +
+必須明確地藉由<ref>屬性 來指定參考的Bean 
+
+* byName +
+Autowiring by property name. +
+Spring 會自動尋找與屬性名稱相同的Bean去自動注入 +
+例如 某類別中有setter 方法為 setMaster(Master xxx) +
+Spring 會自動尋找被命名為 "master" 的Bean 注入
+
+* byType +
+Lets a property be autowired if exactly one bean of the property type exists in the container. +
+If more than one exists, a fatal exception is thrown. +
+If there are no matching beans, nothing happens (the property is not set).
+
+* constructor +
+Analogous to byType but applies to constructor arguments. +
+If there is not exactly one bean of the constructor argument type in the container, a fatal error is raised.
+
+
+
+
+.Autowiring Limitations and Disadvantages
+****
+.limitations and disadvantages
+* Explicit dependencies in property and constructor-arg settings always override autowiring.
+* You cannot autowire simple properties such as primitives, Strings, and Classes.
+* Autowiring is less exact than explicit wiring.
+* Wiring information may not be available to tools that may generate documentation from a Spring container.
+
+
+.sloves
+* Abandon autowiring in favor of explicit wiring.
+* Avoid autowiring for a bean definition by setting its autowire-candidate attributes to false.
+* Designate a single bean definition as the primary candidate by setting the primary attribute of its <bean/> element to true.
+* Implement the more fine-grained control available with annotation-based configuration.
+****
+
+=== Autowiring byName
+Spring 會嘗試匹配需要注入的Bean中的屬性"名稱"與配置文件中相同的名稱定義的Bean。如果找到匹配項，它會注入這些bean，否則，它會拋出異常。
+仍然可以使用<property>標籤注入其餘屬性。
+
+.標準XML配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+      <property name="spellChecker" ref="spellChecker" />
+      <property name="name" value="Generic Text Editor" />
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+.Autowiring 配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor" 
+      autowire="byName">
+      <property name="name" value="Generic Text Editor" />
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+
+
+=== Autowiring byType
+Spring 會嘗試匹配需要注入的Bean中的屬性"類型"與配置文件中相同的類型定義的Bean。如果找到匹配項，它會注入這些bean，否則，它會拋出異常。 +
+仍然可以使用<property>標籤注入剩餘的參數。
+
+.標準XML配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+      <property name="spellChecker" ref="spellChecker" />
+      <property name="name" value="Generic Text Editor" />
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+.Autowiring 配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor" 
+      autowire="byType">
+      <property name="name" value="Generic Text Editor" />
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="SpellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+=== Autowiring constructor
+與byType非常相似，但它應用於建構子參數。 +
+Spring 會嘗試匹配和連線它的建構子參數與Bean名稱相同，如果找到匹配項，它會注入這些bean，否則，它會拋出異常。 +
+仍然可以使用<constructor-arg>標籤注入剩餘的參數。
+
+.標準XML配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+      <constructor-arg  ref="spellChecker" />
+      <constructor-arg  value="Generic Text Editor"/>
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+.Autowiring 配置
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor" 
+      autowire="constructor">
+      <constructor-arg value="Generic Text Editor"/>
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="SpellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+
+== Annotation-based Container Configuration
+
+此時你的XML 需要配置<context:annotation-config/> 標籤 +
+
+這一條配置，作用是向Spring 容器註冊 +
+AutowiredAnnotationBeanPostProcessor (@Autowired) +
+CommonAnnotationBeanPostProcessor (@Resource @PostConstruct @PreDistroy) +
+PersistenceAnnotationBeanPostProcessor (@PersistenceContext) +
+RequiredAnnotationBeanPostProcessor (@Required) +
+這4個BeanPostProcessor +
+是為了讓系統能夠識別相對應的Annotation
+
+當<context:annotation-config/>配置後，就可以開始使用Annotation。 +
+Spring 會將 屬性、方法和構造函數 自動注入。
+
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+   <!-- bean definitions go here -->
+
+</beans>
+--
+
+
+=== @Required
+適用於bean屬性的setter方法。 +
+受影響的bean屬性必須在配置時被寫在XML配置文件中，否則容器將拋出BeanInitializationException例外。 +
+一樣直接看個例子
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <!-- Definition for student bean -->
+   <bean id="student" class="com.yiibai.Student">
+      <property name="name"  value="Zara" />
+      <property name="age"  value="11"/>
+      <!-- 若註解掉name 或age 任一行 程式將拋出例外 -->
+   </bean>
+
+</beans>
+--
+
+.Class部分
+[source]
+--
+
+public class Student {
+   private Integer age;
+   private String name;
+
+   @Required
+   public void setAge(Integer age) {
+      this.age = age;
+   }
+   public Integer getAge() {
+      return age;
+   }
+
+   @Required
+   public void setName(String name) {
+      this.name = name;
+   }
+   public String getName() {
+      return name;
+   }
+}
+
+public class MainApp {
+   public static void main(String[] args) {
+      ApplicationContext context = 
+             new ClassPathXmlApplicationContext("Beans.xml");
+
+      Student student = (Student) context.getBean("student");
+
+      System.out.println("Name : " + student.getName() );
+      System.out.println("Age : " + student.getAge() );
+   }
+}
+--
+
+=== @Autowired
+適用於bean屬性的setter方法​​，非setter方法​​，建構子和屬性。 +
+@Autowired注解提供更精確地控制在何處以及如何使用自動裝配的時機。 +
+當Spring發現​使用@Autowired注解時，它會嘗試對對象進行byType的自動裝配。
+
+@Autowired預設有著@Required的特性，如果想要自動注入，卻又非必要，可以通過使用(required=false)選項使用@Autowired關閉此預設設定，如下。
+
+[source]
+--
+@Autowired(required=false) 
+PersonService personService;
+--
+
+==== 用於Setter
+用法跟 @Required 相同，但使用@Autowired在Setter方法上，可省去XML中的<property>元素
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <!-- Definition for textEditor bean without constructor-arg  -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+.Class部分
+[source]
+--
+
+public class TextEditor {
+   private SpellChecker spellChecker;
+
+   @Autowired
+   public void setSpellChecker( SpellChecker spellChecker ){
+      this.spellChecker = spellChecker;
+   }
+   public SpellChecker getSpellChecker( ) {
+      return spellChecker;
+   }
+   public void spellCheck() {
+      spellChecker.checkSpelling();
+   }
+}
+
+public class SpellChecker {
+   public SpellChecker(){
+      System.out.println("Inside SpellChecker constructor." );
+   }
+
+   public void checkSpelling(){
+      System.out.println("Inside checkSpelling." );
+   }
+   
+}
+--
+
+==== 用於屬性
+使用@Autowired在屬性上，可省去Setter方法，即：
+
+[source]
+--
+public class TextEditor {
+   @Autowired
+   private SpellChecker spellChecker;
+
+   public TextEditor() {
+      System.out.println("Inside TextEditor constructor." );
+   }
+   public SpellChecker getSpellChecker( ){
+      return spellChecker;
+   }
+   public void spellCheck(){
+      spellChecker.checkSpelling();
+   }
+}
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+==== 用於建構子
+使用@Autowired在建構子上，表示該類別在建構物件時，建構子參數會自動裝配。
+
+[source]
+--
+public class TextEditor {
+   private SpellChecker spellChecker;
+
+   @Autowired
+   public TextEditor(SpellChecker spellChecker){
+      System.out.println("Inside TextEditor constructor." );
+      this.spellChecker = spellChecker;
+   }
+
+   public void spellCheck(){
+      spellChecker.checkSpelling();
+   }
+}
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <!-- Definition for textEditor bean -->
+   <bean id="textEditor" class="com.yiibai.TextEditor">
+   </bean>
+
+   <!-- Definition for spellChecker bean -->
+   <bean id="spellChecker" class="com.yiibai.SpellChecker">
+   </bean>
+
+</beans>
+--
+
+
+=== @Qualifier
+使用@Qualifier來指定確切的bean，避免混亂。 +
+通常@Autowired 想指定bean名稱時會搭配使用。
+
+This annotation may be used on a field or parameter as a qualifier for candidate beans when autowiring.
+It may also be used to annotate other custom annotations that can then in turn be used as qualifiers.
+
+.Class 部分
+[source]
+--
+public class Profile {
+   @Autowired
+   @Qualifier("student1") // 指定為student1
+   private Student student;
+
+   public Profile(){
+      System.out.println("Inside Profile constructor." );
+   }
+
+   public void printAge() {
+      System.out.println("Age : " + student.getAge() );
+   }
+
+   public void printName() {
+      System.out.println("Name : " + student.getName() );
+   }
+}
+
+public class Student {
+   private Integer age;
+   private String name;
+
+   public void setAge(Integer age) {
+      this.age = age;
+   }
+   public Integer getAge() {
+      return age;
+   }
+
+   public void setName(String name) {
+      this.name = name;
+   }
+   public String getName() {
+      return name;
+   }
+}
+
+
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <!-- Definition for profile bean -->
+   <bean id="profile" class="com.yiibai.Profile">
+   </bean>
+
+   <!-- Definition for student1 bean -->
+   <bean id="student1" class="com.yiibai.Student">
+      <property name="name"  value="Zara" />
+      <property name="age"  value="11"/>
+   </bean>
+
+   <!-- Definition for student2 bean -->
+   <bean id="student2" class="com.yiibai.Student">
+      <property name="name"  value="Nuha" />
+      <property name="age"  value="2"/>
+   </bean>
+
+</beans>
+--
+
+.main方法
+[source]
+--
+public class MainApp {
+   public static void main(String[] args) {
+      ApplicationContext context = 
+             new ClassPathXmlApplicationContext("Beans.xml");
+
+      Profile profile = (Profile) context.getBean("profile");
+
+      profile.printAge();
+      profile.printName(); // 執行結果會印出Student1 的資料
+   }
+}
+--
+
+
+=== JSR-250 Annotations (CommonAnnotationBeanPostProcessor)
+Spring also supports injection by using the JSR-250 +
+@Resource、@PostConstruct和@PreDestroy
+
+==== @Resource
+Default byName mode. +
+Used on fields or bean property setter methods. +
+
+.@Resource Injection Step
+. By default, Spring interprets that value as the bean name to be injected. In other words, it follows by-name semantics. +
+. If no name is explicitly specified, the default name is derived from the field name or setter method. +
+. In the exclusive case of @Resource usage with no explicit name specified, @Resource finds a primary type match instead of a specific named bean.
+
+.Class 部分
+[source]
+--
+public class Profile {
+
+   @Resource(name = "student1") // 指定為student1
+   private Student student;
+
+   public Profile(){
+      System.out.println("Inside Profile constructor." );
+   }
+
+   public void printAge() {
+      System.out.println("Age : " + student.getAge() );
+   }
+
+   public void printName() {
+      System.out.println("Name : " + student.getName() );
+   }
+}
+--
+
+
+==== @PostConstruct和@PreDestroy
+offers an alternative to the lifecycle callback mechanism described in initialization callbacks and destruction callbacks. 
+
+@PostConstruct -> Initialization Callbacks +
+@PreDestroy -> Destruction Callbacks
+
+.Class 部分
+[source]
+--
+public class HelloWorld {
+   private String message;
+
+   public void setMessage(String message){
+      this.message  = message;
+   }
+
+   public String getMessage(){
+      System.out.println("Your Message : " + message);
+      return message;
+   }
+   @PostConstruct
+   public void init(){
+      System.out.println("Bean is going through init.");
+   }
+   @PreDestroy
+   public void destroy(){
+      System.out.println("Bean will destroy now.");
+   }
+}
+
+public class MainApp {
+   public static void main(String[] args) {
+
+      AbstractApplicationContext context = 
+                          new ClassPathXmlApplicationContext("Beans.xml");
+
+      HelloWorld obj = (HelloWorld) context.getBean("helloWorld");
+      obj.getMessage();
+      context.registerShutdownHook();
+   }
+}
+
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:annotation-config/>
+
+   <bean id="helloWorld" class="com.yiibai.HelloWorld">
+       <property name="message" value="Hello World!"/>
+   </bean>
+
+</beans>
+--
+
+== Java-based Container Configuration
+
+This section covers how to use annotations in your Java code to configure the Spring container. +
+
+=== @Bean and @Configuration
+
+[source]
+--
+@Configuration
+public class AppConfig { // 以一個類別取代XML文件 的概念
+
+    @Bean // Annotation 相對於 <bean>
+    public MyService myService() {  // 變數名稱 相對於 id, 類型 相對於 class
+        return new MyServiceImpl();
+    }
+}
+--
+
+The preceding AppConfig class is equivalent to the following Spring <beans/> XML:
+
+[source]
+--
+<beans>
+    <bean id="myService" class="com.acme.services.MyServiceImpl"/>
+</beans>
+--
+
+如果用Java-based Container Configuration的話，可以使用AnnotationConfigApplicationContext 取得相對應的Bean 物件 +
+如下：
+
+[source]
+--
+public static void main(String[] args) {
+
+   ApplicationContext ctx = 
+         new AnnotationConfigApplicationContext(AppConfig.class);
+
+   /* 
+   ApplicationContext ctx =  
+         new AnnotationConfigApplicationContext(); // 或是可以這樣寫
+   ctx.register(AppConfig.class);
+   ctx.register(AppConfig1.class);
+   ctx.register(AppConfig2.class);
+   ctx.register(AppConfig3.class); // 可以配置多Config.class
+   */
+   
+   MyService myService = ctx.getBean(MyService.class);
+
+   myService.doSomething();
+}
+--
+
+
+=== Using and Composing
+
+==== basic using
+
+[source]
+--
+@Configuration
+public class HelloWorldConfig {
+
+   @Bean 
+   public HelloWorld helloWorld(){
+      return new HelloWorld();
+   }
+}
+
+public class HelloWorld {
+   private String message;
+
+   public void setMessage(String message){
+      this.message  = message;
+   }
+
+   public void getMessage(){
+      System.out.println("Your Message : " + message);
+   }
+}
+
+public class MainApp {
+   public static void main(String[] args) {
+      ApplicationContext ctx = 
+      new AnnotationConfigApplicationContext(HelloWorldConfig.class);
+   
+      HelloWorld helloWorld = ctx.getBean(HelloWorld.class);
+
+      helloWorld.setMessage("Hello World!");
+      helloWorld.getMessage();
+   }
+}
+
+
+console:
+Your Message : Hello World!
+--
+
+[NOTE]
+--
+值得注意的是：再也沒有XML配置文件了！
+--
+
+==== beans dependency
+當其中某個@Bean 依賴另一個@Bean時 可如下配置：
+
+[source]
+--
+@Configuration
+public class AppConfig {
+   @Bean
+   public Foo foo() {
+      return new Foo(bar());
+   }
+   @Bean
+   public Bar bar() {
+      return new Bar();
+   }
+}
+--
+
+==== Configuration @Import
+
+使用此註解加載另一個Configuration Class 的@Bean。 +
+例如：
+
+[source]
+--
+@Configuration
+public class ConfigA {
+
+   @Bean
+   public A a() {
+      return new A(); 
+   }
+
+}
+
+@Configuration
+@Import(ConfigA.class)
+public class ConfigB {
+
+   @Bean
+   public B a() {
+      return new A(); 
+   }
+
+}
+
+public static void main(String[] args) {
+
+   ApplicationContext ctx = 
+         new AnnotationConfigApplicationContext(ConfigB.class); // 只有 Config B需要提供
+   // now both beans A and B will be available...
+   A a = ctx.getBean(A.class);
+   B b = ctx.getBean(B.class);
+
+}
+--
+
+=== Lifecycle Callbacks
+Any classes defined with the @Bean annotation support the regular lifecycle callbacks and can use the @PostConstruct and @PreDestroy. +
+
+The @Bean annotation supports specifying arbitrary initialization and destruction callback methods, much like Spring XML’s init-method and destroy-method attributes on the bean element, as the following example shows:
+
+[source]
+--
+public class Foo {
+   public void init() {
+      // initialization logic
+   }
+   public void cleanup() {
+      // destruction logic
+   }
+}
+
+@Configuration
+public class AppConfig {
+   @Bean(initMethod = "init", destroyMethod = "cleanup" )
+   public Foo foo() {
+      return new Foo();
+   }
+}
+--
+
+
+=== Bean Scopes
+Spring includes the @Scope annotation so that you can specify the scope of a bean. +
+You can use any of the standard scopes specified in the Bean Scopes section. +
+
+The default scope is singleton, but you can override this with the @Scope annotation, as the following example shows:
+
+[source]
+--
+@Configuration
+public class AppConfig {
+   @Bean
+   @Scope("prototype")
+   public Foo foo() {
+      return new Foo();
+   }
+}
+--
+
+
+== Standard and Custom Events
+Event handling in the ApplicationContext is provided through the ApplicationEvent class and the ApplicationListener interface. + 
+If a bean that implements the ApplicationListener interface is deployed into the context, every time an ApplicationEvent gets published to the ApplicationContext, that bean is notified.
+
+[cols="1,2,3"]
+|===
+^| Event ^| Published Status  ^| Explanation
+
+|ContextRefreshedEvent
+|when the ApplicationContext is initialized or refreshed
+|Here, “initialized” means that + 
+all beans are loaded, +
+post-processor beans are detected and activated, +
+singletons are pre-instantiated, +
+and the ApplicationContext object is ready for use.  +
+
+As long as the context has not been closed, a refresh can be triggered multiple times, provided that the chosen ApplicationContext actually supports such “hot” refreshes.
+
+|ContextStartedEvent
+|when the ApplicationContext is started by using the start() method
+|Here, “started” means that all Lifecycle beans receive an explicit start signal. 
+
+|ContextStoppedEvent
+|when the ApplicationContext is stopped by using the stop() method
+|Here, “stopped” means that all Lifecycle beans receive an explicit stop signal. +
+
+A stopped context may be restarted through a start() call.
+
+|ContextClosedEvent
+|when the ApplicationContext is closed by using the close() method
+|Here, “closed” means that all singleton beans are destroyed. +
+
+A closed context reaches its end of life. It cannot be refreshed or restarted.
+
+|RequestHandledEvent
+|an HTTP request has been serviced
+|This event is published after the request is complete. +
+
+This event is only applicable to web applications that use Spring’s DispatcherServlet.
+
+|===
+
+=== Standard Events
+
+.Class部分
+[source]
+--
+public class HelloWorld {
+   private String message;
+
+   public void setMessage(String message){
+      this.message  = message;
+   }
+
+   public void getMessage(){
+      System.out.println("Your Message : " + message);
+   }
+}
+--
+
+Handler的部分，實作ApplicationListener介面，泛型使用要發布的事件(這裡使用ContextStartedEvent)，並實作onApplicationEvent() 方法
+
+[source]
+--
+public class CStartEventHandler 
+   implements ApplicationListener<ContextStartedEvent>{
+
+   public void onApplicationEvent(ContextStartedEvent event) {
+      System.out.println("ContextStartedEvent Received");
+   }
+}
+
+public class CStopEventHandler 
+   implements ApplicationListener<ContextStoppedEvent>{
+
+   public void onApplicationEvent(ContextStoppedEvent event) {
+      System.out.println("ContextStoppedEvent Received");
+   }
+}
+--
+
+main 方法部分，使用start() 及stop() 觸發Handler 事件。
+
+[source]
+--
+
+public class MainApp {
+   public static void main(String[] args) {
+      ConfigurableApplicationContext context = 
+            new ClassPathXmlApplicationContext("Beans.xml");
+      
+      context.start(); // Let us raise a start event.
+	  
+      HelloWorld obj = (HelloWorld) context.getBean("helloWorld");
+      obj.getMessage();
+      
+      context.stop(); // Let us raise a stop event.
+   }
+}
+
+console: 
+ContextStartedEvent Received
+Your Message : Hello World!
+ContextStoppedEvent Received
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="helloWorld" class="com.yiibai.HelloWorld">
+       <property name="message" value="Hello World!"/>
+   </bean>
+   <bean id="cStartEventHandler" class="com.yiibai.CStartEventHandler"/>
+   <bean id="cStopEventHandler" class="com.yiibai.CStopEventHandler"/>
+
+</beans>
+--
+
+
+
+=== Custom Events
+
+To publish a custom ApplicationEvent, call the publishEvent() method on an ApplicationEventPublisher. Typically, this is done by creating a class that implements ApplicationEventPublisherAware and registering it as a Spring bean.
+
+讓我們來看個例子
+
+Step1. 設計自定義的事件，繼承ApplicationEvent類別及撰寫欲觸發的方法。
+
+[source]
+--
+public class CustomEvent extends ApplicationEvent{
+   
+   public CustomEvent(Object source) {
+      super(source);
+   }
+
+   public String toString(){
+      return "My Custom Event";
+   }
+}
+--
+
+Step2. 設計自定義事件的發布者。實作ApplicationEventPublisherAware介面及實作publishEvent() 方法。
+
+[NOTE]
+--
+注意該介面需實作 setApplicationEventPublisher() 方法，故自定義事件的發布者需有private 屬性ApplicationEventPublisher publisher;
+--
+
+[source]
+--
+public class CustomEventPublisher 
+   implements ApplicationEventPublisherAware {
+   
+   private ApplicationEventPublisher publisher;
+
+   public void setApplicationEventPublisher
+              (ApplicationEventPublisher publisher){
+      this.publisher = publisher;
+   }
+
+   public void publish() {
+      CustomEvent ce = new CustomEvent(this);
+      publisher.publishEvent(ce);
+   }
+}
+--
+
+Step3. 設計Handler 及撰寫主方法
+
+[source]
+--
+public class CustomEventHandler 
+   implements ApplicationListener<CustomEvent>{
+
+   public void onApplicationEvent(CustomEvent event) {
+      System.out.println(event.toString());
+   }
+
+}
+
+public class MainApp {
+   public static void main(String[] args) {
+      ConfigurableApplicationContext context = 
+      new ClassPathXmlApplicationContext("Beans.xml");
+	  
+      CustomEventPublisher cvp = 
+      (CustomEventPublisher) context.getBean("customEventPublisher");
+      cvp.publish();  
+      cvp.publish();
+   }
+}
+
+console:
+My Custom Event
+My Custom Event
+
+--
+
+.XML部分
+[source]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id="customEventHandler" 
+      class="com.yiibai.CustomEventHandler"/>
+
+   <bean id="customEventPublisher" 
+      class="com.yiibai.CustomEventPublisher"/>
+
+</beans>
+--
+
+
+
+[NOTE]
+--
+Spring’s eventing mechanism is designed for simple communication between Spring beans within the same application context. However, for more sophisticated enterprise integration needs, the separately maintained Spring Integration project provides complete support for building lightweight, pattern-oriented, event-driven architectures that build upon the well-known Spring programming model.
+
+Spring事件處理是單執行緒的，所以如果一個事件被發布，除非所有的接收器都獲得訊息，否則該執行緒會被阻塞且流程將不會繼續。因此，如果要使用事件處理，應在系統設計時注意此議題。
+--
+
+

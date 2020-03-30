@@ -1,0 +1,134 @@
+= 使用者管理
+劉育辰 <ycliu1125@gmail.com>
+v0.1, 2020-02-17
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:imagesdir: /images
+:sourcedir: /uml
+
+== 作業說明
+
+|===
+|作業代號|user|作業名稱|使用者管理
+|===
+
+=== 作業目的
+
+本系統使用者帳號的建檔及管理作業
+
+=== 權限說明
+
+|===
+|角色|選單|新增|查詢|修改|刪除
+
+|系統管理員
+|V
+|V
+|V
+|V
+|V
+
+|一般使用者
+|V
+|
+|直接進到自己帳號修改頁面
+|V
+|
+
+|===
+
+=== 資料來源
+
+[[TABLEUSER]]
+* TABLEUSER: 使用者資料
+
+== 查詢畫面
+
+[[image-user-01]]
+image::user-01.png[查詢畫面,500,title="查詢畫面"]
+
+=== 欄位說明
+
+[cols="1,1,1,1a",options="header"]
+|===
+|欄位名稱
+|表單欄位名稱
+|類型
+|備註
+
+|使用者帳號
+|queryContext.conditions[userId]
+|text
+|
+
+|姓名
+|queryContext.conditions[name]
+|text
+|
+
+|===
+
+=== 功能說明
+
+* btn:[新增]：畫面切換到<<image-user-02>>。
+* btn:[查詢]：依據查詢條件進行查詢，將查詢結果顯示在查詢列表上。
+
+== 編輯畫面
+
+[[image-user-02]]
+image::user-02.png[新增畫面,500,title="新增畫面"]
+
+[[image-user-03]]
+image::user-03.png[修改畫面,500,title="修改畫面"]
+
+[[delete-confirm]]
+image::delete-confirm.png[刪除確認視窗,500,title="刪除確認視窗"]
+
+=== 欄位說明
+
+[cols="1,1,1,1a",options="header"]
+|===
+|欄位名稱
+|表單欄位名稱
+|類型
+|備註
+
+|姓名
+|name
+|text
+|必填欄位
+
+|使用者帳號
+|userId
+|text
+|必填欄位
+
+|使用者密碼
+|password
+|password
+|必填欄位
+
+|電話
+|phone
+|text
+|必填欄位
+
+|電子信箱
+|email
+|text
+|必填欄位
+
+|===
+
+=== 功能說明
+
+* btn:[新增]：將資料新增到<<TABLEUSER>>。
+* btn:[修改]：修改<<TABLEUSER>>。
+* btn:[回查詢]：畫面切換回<<image-user-01>>。
+* btn:[刪除]：彈出<<delete-confirm>>。
+* btn:[確定]：刪除此筆使用者資料同時畫面切換回<<image-user-01>>。
+* btn:[取消]：關閉<<delete-confirm>>。
+* btn:[X]：關閉<<delete-confirm>>。

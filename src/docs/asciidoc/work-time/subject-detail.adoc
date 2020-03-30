@@ -1,0 +1,74 @@
+= 工時填寫
+劉育辰 <ycliu1125@gmail.com>
+v0.1, 2020-02-17
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:imagesdir: /images
+:sourcedir: /uml
+
+== 作業說明
+
+|===
+|作業代號|subject-detail|作業名稱|工時填寫
+|===
+
+=== 作業目的
+
+讓使用者紀錄他被分配的議題所耗費的時間
+
+=== 資料來源
+
+[[TABLESUBJECT]]
+* TABLESUBJECT: 議題資料
+
+[[TABLESUBJECT_DETAIL]]
+* TABLESUBJECT_DETAIL: 議題詳細資料
+
+[[fill-form]]
+== 填寫畫面
+
+[[image-subject-detail-01]]
+image::subject-detail-01.png[未填寫畫面,500,title="未填寫畫面"]
+
+[[image-subject-detail-02]]
+image::subject-detail-02.png[已填寫畫面,500,title="已填寫畫面"]
+
+=== 欄位說明
+
+[cols="1,1,1,1a",options="header"]
+|===
+|欄位名稱
+|表單欄位名稱
+|類型
+|備註
+
+|花費時間
+|costTime
+|number
+|非必填，可輸入至小數以下一位
+
+|狀態
+|state
+|single-select
+|非必填，option參考<<議題狀態>>
+
+|回應
+|response
+|text
+|非必填
+
+|===
+
+=== 功能說明
+
+* 載入頁面時：依照當前登入的使用者，顯示當天被分派給他的議題。使用者為系統管理員時，顯示所有議題。 +
+若當天議題尚未填寫，顯示<<image-subject-detail-01>>，若已有填寫，顯示<<image-subject-detail-02>>
+* btn:[日曆圖示]：顯示date-picker供使用者選擇，選擇日期後畫面跳到該日<<fill-form>>。
+* btn:[更新]：更新填寫的資料至<<TABLESUBJECT_DETAIL>>。
+
+[[議題狀態]]
+* [議題狀態]：新建立、實作中、已完成、已結束。
+

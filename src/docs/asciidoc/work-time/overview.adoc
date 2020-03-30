@@ -1,0 +1,44 @@
+= 新訓-工時系統練習專案
+
+[[_overview]]
+== Overview
+
+新訓-工時系統練習專案
+
+=== Version information
+
+[%hardbreaks]
+__Version__ : 1.0
+
+=== Contact information
+
+[%hardbreaks]
+__Contact__ : ○○科技股份有限公司
+__Contact Email__ : service@xxxx.com.tw
+
+=== License information
+
+[%hardbreaks]
+__License__ : ○○科技股份有限公司版權所有
+__License URL__ : https://github.com/ycliu1125
+
+=== URI scheme
+
+[%hardbreaks]
+__Host__ : localhost:8080
+__BasePath__ : /
+
+=== Main components
+
+[cols="2,5"]
+|===
+|components| describe
+
+|user | 本系統使用者帳號建檔作業。
+
+|subject | 議題資料建檔作業(含指派)。
+
+|subject-detail | 議題詳細資料，用於紀錄每次的工時內容。
+
+|===
+

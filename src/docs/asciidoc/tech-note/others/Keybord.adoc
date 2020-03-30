@@ -1,0 +1,135 @@
+= 聊聊鍵盤
+劉育辰 <torr@tist.com.tw>
+v1.0, 2019-12-26
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:imagesdir: images/
+:sectanchors:
+
+== 鍵盤：起源
+
+* 鍵盤的前身 -> 打字機
+* 世界上最早的打字機誕生於1808年，它是由義大利人佩萊里尼·圖裡（Pellegrino Turri）發明
+* 1868年，「打字機之父」－美國人克里斯托夫·拉森·肖爾斯（Christopher Latham Sholes），獲得了打字機模型專利並取得打字機的經營權，並首次規範了鍵盤基本格局(QWERTY)，同時告別了活字印刷的時代。
+* 到了20世紀中葉，鍵盤成為了電腦的基本輸入裝置。
+
+.早期打字機廣告
+image::keybord\01.jpg[早期打字機廣告]
+
+== 鍵盤：布局
+* 原設計原則：減少打字機在打字時連動杆之間的擠壓及故障發生率
+* 提高打字速度
+
+=== QWERTY (快蹄)
+* 設計者：美國-克里斯托夫·拉森·肖爾斯（Christopher Latham Sholes）
+* 就是現在大家最常見到的鍵盤
+
+=== Dvorak (德沃夏克)
+
+.德沃夏克鍵盤
+image::keybord\02.png[Dvorak]
+
+目前，世界上最快的英文打字速度是在德沃夏克鍵盤上創造的。 +
+根據《金氏世界記錄大全》，Barbara Blackburn是目前世界上最快的打字員。 +
+2005年，她在Dvorak鍵盤上連續打字50分鐘，平均每分鐘150個詞，峰值速度為每分鐘212個單詞。
+
+=== Malt 
+
+.Malt鍵盤
+image::keybord\03.png[Malt]
+
+* 醜爆了
+* 聽說比DVORAK鍵盤更加合理、高效
+
+=== 其他
+
+* Colemak
+* HCESAR
+* AZERTY
+
+== 鍵盤：開關技術
+
+=== 薄膜式
+
+* 三層薄膜組成
+
+.薄膜式
+image::keybord\Membrane.png[薄膜]
+
+=== 機械式
+
+[.left]
+image::keybord\brown.gif[機械]
+[.left]
+image::keybord\blue.gif[機械]
+[.left]
+image::keybord\red.gif[機械] 
+[.left]
+image::keybord\black.gif[機械]
+
+.四種基本軸
+image::keybord\4.jpeg[四種]
+
+|===
+|軸體|鍵程|觸發行程|下壓力道|段落感
+
+|青軸
+|4mm
+|2.2±0.6 mm
+|50 ± 15 cN
+|有
+
+|茶軸
+|4mm
+|2±0.6 mm
+|45 ± 15 cN
+|有
+
+|紅軸
+|4mm
+|2±0.6 mm
+|45 ± 15 cN
+|無
+
+|黑軸
+|4mm
+|2±0.6 mm
+|60 ± 20 cN
+|無
+
+|銀軸
+|3.4mm
+|1.2±0.4 mm
+|45 ± 15 cN
+|無
+
+|===
+
+
+
+
+=== 電容式
+
+.電容式
+image::keybord\electric.jfif[電容式]
+
+=== 光學式
+.光軸
+image::keybord\light.gif[光軸]
+
+.稜鏡軸
+image::keybord\triangle.jpg[稜鏡軸]
+
+.稜鏡軸力道
+image::keybord\tri.gif[稜鏡軸力道]
+
+* 透過光線強度的變化，鍵盤就能偵測按鍵的行程，並反推為按壓的力道。
+
+
+
+== 總結
+
+* 沒有最好的鍵盤，只有最適合自己的鍵盤。

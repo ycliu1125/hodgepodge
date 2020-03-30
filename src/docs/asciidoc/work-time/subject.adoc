@@ -1,0 +1,163 @@
+= 議題管理
+劉育辰 <ycliu1125@gmail.com>
+v0.1, 2020-02-17
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:imagesdir: /images
+:sourcedir: /uml
+
+== 作業說明
+
+|===
+|作業代號|subject|作業名稱|議題管理
+|===
+
+=== 作業目的
+
+本系統專案議題的建檔及管理作業
+
+=== 權限說明
+
+|===
+|角色|選單|新增|查詢|修改|刪除
+
+|系統管理員
+|V
+|V
+|V
+|V
+|V
+
+|一般使用者
+|V
+|V
+|V
+|V
+|
+
+|===
+
+=== 資料來源
+
+[[TABLESUBJECT]]
+* TABLESUBJECT: 議題資料
+
+[[TABLEUSER]]
+* TABLEUSER: 使用者資料
+
+== 查詢畫面
+
+[[image-subject-01]]
+image::subject-01.png[查詢畫面,500,title="查詢畫面"]
+
+=== 欄位說明
+
+[cols="1,1,1,1a",options="header"]
+|===
+|欄位名稱
+|表單欄位名稱
+|類型
+|備註
+
+|議題編號
+|no
+|text
+|
+
+|主旨
+|title
+|text
+|
+
+|被指派者
+|processor
+|single-select
+|option為目前系統的使用者
+
+|議題狀態
+|state
+|single-select
+|option參考<<議題狀態>>
+
+|===
+
+=== 功能說明
+
+* btn:[新增]：畫面切換到<<image-project-02>>。
+* btn:[查詢]：依據查詢條件進行查詢，將查詢結果顯示在查詢列表上。
+* link:[主旨]：每個議題的主旨為連結，畫面切換到<<image-project-03>>。。
+
+[[議題狀態]]
+* [議題狀態]：請選擇、新建立、實作中、已完成、已結束。
+
+== 編輯畫面
+
+[[image-subject-02]]
+image::subject-02.png[新增畫面,500,title="新增畫面"]
+
+[[image-subject-03]]
+image::subject-03.png[修改畫面,500,title="修改畫面"]
+
+[[delete-confirm]]
+image::delete-confirm.png[刪除確認視窗,500,title="刪除確認視窗"]
+
+=== 欄位說明
+
+[cols="1,1,1,1a",options="header"]
+|===
+|欄位名稱
+|表單欄位名稱
+|類型
+|備註
+
+|議題編號
+|no
+|text
+|readonly，系統自動產生
+
+|主旨
+|title
+|text
+|必填
+
+|內容概述
+|content
+|textarea
+|必填
+
+|議題狀態
+|status
+|singleSelect
+|必填，新增時預設為新建立
+
+|被指派者
+|processor
+|singleSelect
+|必填
+
+|預估工時
+|forecastTime
+|number
+|必填，可輸入數字至小數點第一位
+
+|實際工時
+|actualTime
+|number
+|新增時預設0，可輸入數字至小數點第一位
+
+|===
+
+=== 功能說明
+
+* btn:[回查詢]：畫面切換回<<image-subject-01>>。
+* btn:[新增]：將資料新增到<<TABLESUBJECT>>。
+* btn:[修改]：修改<<TABLESUBJECT>>。
+* btn:[刪除]：彈出<<delete-confirm>>。
+* btn:[確定]：刪除此筆資料同時畫面切換回<<image-subject-01>>。
+* btn:[取消]：關閉<<delete-confirm>>。
+* btn:[X]：關閉<<delete-confirm>>。
+* [議題編號]: 規則為3碼民國年+4碼流水號，以議題建立日期為準。
+

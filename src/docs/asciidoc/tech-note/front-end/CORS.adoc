@@ -1,0 +1,279 @@
+= CORS
+劉育辰 <torr@tist.com.tw>
+v0.1, 2020-01-13
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+== What is CORS
+
+* 全名：Cross-Origin Resource Sharing (CORS)，跨來源資源共享
+* 是瀏覽器技術規範，藉由判斷 HTTP Header，阻擋或允許不同來源網域的資源存取。 +
+* 同源安全政策（Same-Origin Security Policy），預設會禁止跨網域的資源請求。CORS 賦予網站伺服器跨網域存取控制能力，使其能安全地跨網域傳輸資料。
+
+.CORS_priciple
+image::images\cors\CORS_principle.png[CORS_priciple]
+
+== Same-Origin V.S Cross-Origin
+
+* 同源定義：兩份網頁具備相同協定(protocol)、埠號(port)以及網域(domain)
+* 網址解析： http://bobi.tist.com.tw:80/kinmen-welfare/people
+** `https` -> Protocol
+** `bobi` -> Sub-domain / Host
+** `tist` -> Domain (Second-Level Domain)
+** `.com` -> Top-Level Domain
+*** `.com .edu .org` 一般性頂級網域（General TLD, gTLD）
+*** `.tw .cz .en` 國別頂級網域（Country-code TLD, ccTLD）
+** `:80` -> Port
+** `/kinmen-welfare/people` -> Path
+
+.舉個例子
+[cols="5,5,2"]
+
+|===
+|URL1 |URL2 |SO/CO
+
+|-http://localhost:8080/admin
+|-http://localhost:8080/home
+|同源
+
+|-http://localhost:4200
+|-http://localhost:8080
+|跨來源
+
+|-http://127.0.0.1:8080
+|-http://localhost:8080
+|跨來源 footnote:[參閱127.0.0.1與localhost的關係]
+
+|===
+
+== Request
+
+=== Simple Requests (簡單請求)
+
+* 不會觸發Preflight Request
+* 須滿足以下所有條件：
+. 僅允許 GET、POST、HEAD 方法。
+. 除了 user agent 自動設定的標頭外，僅可手動設定被定義為「CORS 安全列表請求標頭（CORS-safelisted request-header）」的標頭。
+. 僅允許以下 Content-Type 標頭值。
+** application/x-www-form-urlencoded
+** multipart/form-data
+** text/plain
+. 沒有事件監聽器被註冊到任何用來發出請求的 XMLHttpRequestUpload 物件上。
+. 請求中沒有 ReadableStream 物件被用於上傳。
+
+=== Preflight Request (預檢請求)
+
+* 會先以 HTTP 的 OPTIONS 方法送出請求到另一個網域，確認後續實際（actual）請求是否可安全送出
+* 滿足以下任一條件：
+. 請求方法為以下其中之一： +
+    PUT、 DELETE、 CONNECT、 OPTIONS、 TRACE、 PATCH。
+. 除了 user agent 自動設定的標頭外，包含任何CORS-safelisted request-header以外的標頭。
+. Content-Type 標頭值包含簡單請求允許以外的標頭值
+. 有一或多個事件監聽器被註冊到一個用來發出請求的 XMLHttpRequestUpload 物件上。
+. 有至少一個 ReadableStream 物件被於上傳。
+
+NOTE: <script> 或者 <image> 觸發的 GET 請求不包含 Origin 頭，所以不受到 CORS 的限制，依舊可用。
+
+== CORS Header
+
+.CORS Header
+[cols="3,5"]
+|===
+^| Header ^| Description
+|Access-Control-Allow-Origin
+|表示回傳資料能否共享（布林值）。
+
+|Access-Control-Allow-Credentials
+|指定為 true 時，瀏覽器可以傳送或接收敏感資訊（HTTP Cookie）。
+
+|Access-Control-Allow-Headers
+|指定可以出現在真實請求的 HTTP 標頭，用來回應預檢請求。
+
+|Access-Control-Allow-Methods
+|指定存取資源所允許的 HTTP 方法，用來回應預檢請求。
+
+|Access-Control-Expose-Headers
+|表示瀏覽器允許存取的標頭白名單，例如 X-My-Header, X-My-Custom-Header。
+
+|Access-Control-Max-Age
+|表示預檢請求的回傳結果可以被快取多久（秒）。
+
+|Access-Control-Request-Headers
+|用於預檢請求，讓伺服器知道後續真實請求夾帶的 HTTP 標頭。
+
+|Access-Control-Request-Method
+|用於預檢請求，讓伺服器端知道後續真實請求使用的 HTTP 方法。
+
+|Origin
+|告訴伺服器請求來源之網域。
+
+|===
+
+== Spring CORS
+
+在SpringBoot中，有四種方法可以實作CORS方式
+
+. CorsFilter (全域跨網域)
+. 覆寫 WebMvcConfigurer
+. 使用 Annotation(@CrossOrigin)
+. 手動設定 response header
+
+=== CorsFilter
+
+配置一個JavaConfig Bean
+
+[source]
+--
+@Configuration public class GlobalCorsConfig { @Bean public CorsFilter corsFilter() { CorsConfiguration config = new CorsConfiguration();
+
+        //允許跨網域請求的來源
+        config.addAllowedOrigin("/*");
+
+        //允許跨域攜帶cookie資訊，預設跨網域請求是不攜帶cookie資訊的。
+        config.setAllowCredentials(true);
+
+        //允許使用那些請求方式
+        config.addAllowedMethod("/*");
+        //config.setAllowedMethods(Arrays.asList("GET", "PUT", "POST","DELETE"));
+        //config.addAllowedMethod(HttpMethod.POST);
+
+        //允許哪些Header
+        config.addAllowedHeader("/*");
+        //config.addAllowedHeader("x-firebase-auth");
+
+        //可獲取哪些Header（因為跨網域預設不能取得全部Header資訊）
+        config.addExposedHeader("/*");
+        //config.addExposedHeader("Content-Type");
+        //config.addExposedHeader("X-Requested-With");
+        //config.addExposedHeader("accept");
+        //config.addExposedHeader("Origin");
+        //config.addExposedHeader("Access-Control-Request-Method");
+        //config.addExposedHeader("Access-Control-Request-Headers");
+
+        //映射路徑
+        UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
+        configSource.registerCorsConfiguration("/**", config);
+
+        //return一個的CorsFilter.
+        return new CorsFilter(configSource);
+    }
+
+}
+
+--
+
+=== 覆寫 WebMvcConfigurer
+
+[source]
+--
+@Configuration public class GlobalCorsConfig {
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                // 映射路徑
+                registry.addMapping("/**")
+                        // 允許跨網域請求的來源
+                        .allowedOrigins("/*")
+                        // 允許跨域攜帶cookie資訊，預設跨網域請求是不攜帶cookie資訊的。
+                        .allowCredentials(true)
+                        // 允許使用那些請求方式
+                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        // 允許哪些Header
+                        .allowedHeaders("/*")
+                        // 可獲取哪些Header（因為跨網域預設不能取得全部Header資訊）
+                        .exposedHeaders("Header1", "Header2");
+            }
+        };
+    }
+
+}
+--
+
+=== 使用 @CrossOrigin +
+
+@CrossOrigin 可放在Controller 類別上，也可放在單一方法上
+
+.CrossOrigin Annotation
+[cols="1,5"]
+|===
+^|屬性 ^|描述
+
+|origins / value
+|表示允許跨域的來源
+
+|allowedHeaders
+|限定了client端只能傳送的header參數，不在此範圍內瀏覽器會阻擋發出請求。
+
+|exposedHeaders
+|CORS請求時，XMLHttpRequest物件的getResponseHeader()方法只能拿到6個基本欄位：Cache-Control、Content-Language、Content-Type、Expires、Last-Modified、Pragma。如果想拿到其他欄位，就必須在Access-Control-Expose-Headers裡面指定。
+
+|methods
+|允許的request methods。
+
+|allowCredentials
+|表示是否允許傳送Cookie。
+
+|maxAge
+|用來指定預檢請求的有效期限(秒)，在有效期內不再傳送預檢請求直接請求。
+
+|===
+
+IMPORTANT: 預設情況下，允許所有origins、所有RequestHeader的請求 +
+By default, @CrossOrigin allows all origins, all headers, the HTTP methods specified in the @RequestMapping annotation and a maxAge of 30 minutes.
+
+=== 在Controller 手動設定 response header
+
+[source]
+--
+@Controller public class CorsController {
+
+    @RequestMapping("/hello")
+    @ResponseBody
+    public String index(HttpServletResponse response){
+        response.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");
+        return "Hello World";
+    }
+
+}
+--
+
+=== Spring MVC CORS 處理過程
+
+無論是通過哪種方式配置 CORS，其實都是在構造 CorsConfiguration。 +
+定義如下：
+
+[source]
+--
+public class CorsConfiguration { private List<String> allowedOrigins; private List<String> allowedMethods; private List<String> allowedHeaders; private List<String> exposedHeaders; private Boolean allowCredentials; private Long maxAge; }
+--
+
+Spring MVC 中對 CORS 規則的校驗，都是通過委託給 DefaultCorsProcessor 實現的。
+
+DefaultCorsProcessor 處理過程如下：
+
+. 判斷依據是 Header 中是否包含 Origin。 +
+如果包含則說明為 CORS 請求，轉到 2； +
+否則，說明不是 CORS 請求，不作任何處理。
+. 判斷 response 的 Header 是否已經包含 Access-Control-Allow-Origin， +
+如果包含，證明已經被處理過了, 轉到 3， +
+否則不再處理。
+. 判斷是否同源， +
+如果是則轉交給負責該請求的類處理 +
+是否配置了 CORS 規則，
+.. 如果沒有配置，且是預檢請求，則拒絕該請求， +
+.. 如果沒有配置，且不是預檢請求，則交給負責該請求的類處理。
+.. 如果配置了，則對該請求進行校驗。
+
+校驗就是根據 CorsConfiguration 這個類的配置進行判斷：
+
+判斷 origin 是否合法 +
+判斷 method 是否合法 +
+判斷 header 是否合法 +
+如果全部合法，則在 response header 中新增響應的欄位，並交給負責該請求的類處理，如果不合法，則拒絕該請求。

@@ -1,0 +1,721 @@
+= AcsiiDoc練習
+劉育辰 <torr@tist.com.tw>
+v0.3, 2019-08-01
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+
+== 文件標題 Document Header (=)
+指的是整份文件最上方的標題 +
+以一個等號(=)表示 +空格後直接寫標題 +
+= 像這樣 
+
+* 文件標題可有可無(通常都會寫) +
+* 標題區塊下方必須緊跟一行空行與文件內容區隔 +
+* 標題區塊可附帶幾項說明，包刮：作者行、版本行及屬性
+
+[IMPORTANT]
+====
+你不能只寫版本行而不寫作者行
+====
+
+====
+= My Document's Title +
+Doc Writer <doc.writer@asciidoctor.org> +
+v1.0, 2014-01-01 +
+:experimental: // 設定這個屬性才能使用UI Macros  +
+:icons: font //使用Font Awesome 和CSS 描繪圖示 其他屬性還有inline 和styled +
+:sectnums: // 大綱(段落標題)加序號 + 
+:toc: left //Table of Contents 有加這行的話就會有大鋼，同時指定位置，AsciiDoc會依照標題自動分配 +  
+:toc-title: 大綱 // 大綱標題 +
+:imagesdir: assets/images // 圖片引用目錄 +
+:sourcedir: ../uml +
+:saltdir: ../salt +
+:page-background-image: image:xxx.png[] // 背景圖片 +
+:homepage: http://asciidoctor.org // 網頁 +
+:sectanchors: // 段落標題的前方會出現章節錨點，使用者可以用書籤記錄這個章節 +
+:sectlinks: // 段落標題本身會變成章節錨點，使用者可以用書籤記錄這個章節 +
+
+My document provides... // 內文
+====
+
+== 章節標題 Section Titles (==) 
+以兩個以上等號(==)表示 +空格後直接寫標題 +
+
+=== 用法
+====
+= 一個等號通常用來當文件標題 (Level 0) +
+== 所以章節標題通常由兩個開始 +
+=== 有點像<h1>...<h6>(事實上就是) +
+==== 這是四個 +
+===== 這是五個 +
+====== 這樣六個 +
+======= 沒有七個 +
+== 另啟新局從兩個開始 +
+====
+
+* 等號的個數在編譯成HTML的時候會自動轉換成<h1>...<h6>
+* 使用預設的Doctype 只能允許一個 level 0 的標題(即文件標題)
+* 兩個等號跟兩個等跟中間的區塊會自動產生分隔線隔開 +
+* 要打下一個區塊的時候請隔一行再打兩個等號 +
+== 不然會這樣
+
+=== 章節錨點
+目的都是為了能夠快速瀏覽到該段落的內容，使用者可以用書籤記錄這個章節(網址會變)
+
+[#section-anchor-method-1]
+==== 方法一
+在章節標題上方自訂Id 像這樣 +
+[#section-1] +
+== 第一章
+
+==== 方法二
+在文件標題屬性加上sectanchors 或 sectlink
+
+
+== 段落 ( )
+直接隔一行寫字
+
+像這樣
+
+就會被當作一段文字囉~~
+
+=== 摘要段落
+通常會放在第一段 +
+因為Asciidoctor 的樣式預設會自動將序文的第一段作為摘要段落
+
+==== 語法
+文字段落前標記[.lead] +
+像這樣
+
+[.lead]
+This text will be styled as a lead paragraph (i.e., larger font). +
+And I added more text to make multiple rows.
+
+然後一樣隔行就結束語法區塊囉~~
+
+=== 同一段落中的換行 (+)
+==== 方法一
+一行文字的最後面格一格空格 打+ +
+然後換行書寫
+
+如果沒有換行書寫 + 會像這樣 +
+如果沒有打+直接換行
+會像這樣
+
+範例：
+Rubies are red, + 
+Topazes are blue.
+
+==== 方法二
+[%hardbreaks]
+文字段落前標記[%hardbreaks]
+就會跟著你書寫換行而換行
+隨著下一個標籤語法而結束
+
+解除
+hardbreaks? +
+隔一行分開段落就可以了
+
+== 提示區塊 (Admonition)
+=== 語法一  (較簡易)
+ADMONITION : 內容
+ADMONITION 須全大寫並放在句首 +
+例如 : NOTE: this is NOTE
+
+=== 語法二 (較好區別段落)
+製作提示區塊
+以 [ 中括弧 ] 標記提示關鍵字 +
+下一行以4個等號( ==== ) 做開始 +
+中間輸入內容 +
+最後以4個等號( ==== ) 做結束 +
+
+例如 : +
+[NOTE] +
+ ==== +
+ 這裡打內容 +
+ ====
+
+=== 常用的提示區塊有以下幾種 
+NOTE, TIP, IMPORTANT, WARNING, CAUTION
+
+[NOTE] 
+==== 
+this is NOTE +
+一個 information 的 i 符號 +
+如果在同一段落，會一起被包在警告區塊裡面 +
+要用另一個區塊也是要隔一行
+====
+
+TIP: this is TIP +
+一個電燈泡符號
+
+IMPORTANT: this is IMPORTANT +
+一個紅色圓形驚嘆號符號
+
+WARNING: this is WARNING +
+一個黃色三角形驚嘆號符號
+
+CAUTION: this is CAUTION +
+一個火焰符號(?)
+
+== 分隔區塊
+
+=== Sidebar Block
+以4個星號( \**** ) 做開始 +
+中間輸入內容 +
+最後以4個星號( \**** ) 做結束 +
+
+任何區塊的上方都可以以點號( . ) 開頭+文字來定義標題 +
+點號後方不得有空白
+
+.
+像這樣 +
+\*\*** +
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣 +
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣 +
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣 +
+\**** 
+
+.AsciiDoc history
+****
+AsciiDoc was first released in Nov 2002 by Stuart Rackham.
+It was designed from the start to be a shorthand syntax
+for producing professional documents like DocBook and LaTeX.
+****
+
+=== Example Block
+提示區塊 拿掉上方的ADMONITION +
+改以點號開頭的標題 +
+然後再以4個等號( ==== ) 做開始 +
+中間輸入內容 +
+最後以4個等號( ==== ) 做結束 +
+
+.
+像這樣 +
+ ==== +
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣 +
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣 +
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣 +
+ ==== 
+
+.AsciiDoc history
+====
+AsciiDoc was first released in Nov 2002 by Stuart Rackham.
+It was designed from the start to be a shorthand syntax
+for producing professional documents like DocBook and LaTeX.
+====
+
+=== Blockquote
+
+==== Normal Blockquote
+以中括弧 [quote, 作者, (作品)] 來表示作者 +
+引用內文以4個底線( \____ ) 做開始 +
+中間輸入內容 +
+最後以4個底線( \____ ) 做結束 +
+
+[quote, 誰誰誰, 他的作品] +
+\_\___ +
+要引述的段落 +
+\____
+
+NOTE: 上下方的4個底線可有可無(有就一起有沒有就一起沒有) +
+但會被放進引用區塊的部分就是中括號下方的那一段落
+
+IMPORTANT: 中括弧內的文字不可換行
+
+.內文-作者-作品
+[quote, Abraham Lincoln, Address delivered at the dedication of the Cemetery at Gettysburg]
+____
+Four score and seven years ago our fathers brought forth
+on this continent a new nation...
+____
+
+.內文-作者
+[quote, Albert Einstein]
+A person who never made a mistake never tried anything new.
+
+.只有內文
+____
+A person who never made a mistake never tried anything new.
+____
+
+.內文-作者-作品(含超連結)
+[quote, Charles Lutwidge Dodgson, 'Mathematician and author, also known as http://en.wikipedia.org/wiki/Lewis_Carroll[Lewis Carroll]']
+____
+If you don't know where you are going, any road will get you there.
+____
+
+==== Abbreviated blockquote (Asciidoctor only)
+"雙引號中間打字" 換行後面加兩個減號(--) +空格 再加作者
+
+"就像這樣"
+-- 我
+
+=== Passthrough
+你可以把某個網頁的HTML嵌近來 +
+以4個加號( \+\+++ ) 做開始 +
+中間輸入內容 +
+最後以4個加號( \++++ ) 做結束 +
+
+\+\+++ +
+像這樣 +
+\++++
+
+++++
+<p>
+Content in a passthrough block is passed to the output unprocessed.
+That means you can include raw HTML, like this embedded Gist:
+</p>
+
+<script src="https://gist.github.com/mojavelinux/5333524.js">
+</script>
+++++
+
+NOTE: 要編譯成HTML後才會看到
+
+=== Open Block
+以2個減號( \-- ) 做開始 +
+中間輸入內容 +
+最後以2個減號( \-- ) 做結束 +
+
+Open Block 搭配前綴可以被做成各種不同的區塊 +
+如果什麼都不加 就會被當作一個簡單的段落+
+
+\--  +
+像這樣 +
+\--
+
+--
+An open block can be an anonymous container,
+or it can masquerade as any other block.
+--
+
+搭配[source] 形成程式碼區塊
+
+[source]
+--
+An open block can be an anonymous container,
+or it can masquerade as any other block.
+--
+
+=== Custom substitutions
+可以代換內容 +
+我們直接看範例
+
+:version: 1.5.6.1
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+  <groupId>org.asciidoctor</groupId>
+  <artifactId>asciidoctor-java-integration</artifactId>
+  <version>{version}</version>
+</dependency>
+----
+
+
+== 註解 (//)
+
+=== 單行註解
+使用2個正斜線(/) 後面接文字 +
+註解符號要放在單行開頭 +
+ // 像這樣 ↓
+//像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣
+
+NOTE: 單行註解可以用來分隔元素，例如兩個相鄰的清單
+
+=== 多行註解
+用4個正斜線 (////) 做開始 +
+中間輸入內容 +
+再用4個正斜線 (////) 做結束 +
+ //// +
+ 像這樣 +
+ //// +
+////
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣
+像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣像這樣
+////
+
+== 字型(Formatted Text)
+
+=== 粗體 ( * )
+以一個或兩個星號( * )包住想要粗體的文字
+
+\*像這樣* -> *像這樣* +
+\\**像這樣** -> **像這樣** +
+
+=== 斜體 ( _ )
+以一個或兩個底線( _ )包住想要斜體的文字
+
+\_像這樣_ -> _像這樣_ +
+\\__像這樣__ -> __像這樣__
+
+=== 粗斜體 
+綜合以上兩種, 自己想 +
+*_出來會是這樣子_*  **__或是這樣子__**
+
+=== 等寬字體 ( ` )
+以一個或兩個反引號( ` )包住想要等寬的文字 
+
+\`like this` -> `like this` +
+\\`` or this ``  -> ``or this`` +
+
+[NOTE]
+====
+利用等寬字體來標記程式碼範圍 +
+`{cpp}` is valid syntax in the programming language by the same name. +
+`+WHERE id <= 20 AND value = "{name}"+` is a SQL WHERE clause. 
+====
+
+=== 等寬粗體、等寬斜體、等寬粗斜體
+就不用我多說了吧。 
+
+=== 自定義樣式 
+中括弧前綴加上一個或兩個 # 包住想要改變樣式的文字 +
+
+\#像這樣# -> #像這樣# (預設是螢光筆標記) +
+[.small]\#像這樣# -> [.small]#像這樣# +
+[.big]\\##像這樣## -> [.big]##像這樣## +
+[.underline]\#像這樣# -> [.underline]#像這樣# +
+[.line-through]\#像這樣# -> [.line-through]#像這樣# 
+
+=== 上標 (^)、下標 (~)
+a\^2^ + b\^2^ = c\^2^ -> a^2^ + b^2^ = c^2^ +
+H\~2~O -> H~2~O +
+^不^然~你也^是^~可以^像這~樣~^~子~啦  +
+
+=== 彎彎的引號 
+在引號( "或 ' )內加上反引號 ( ` ) 包住你要寫的文字 
+
+\"`像這樣`" 或 \'`像這樣\`' -> "`像這樣`" 或 '`像這樣`' +
+沒有加上反引號的引號 -> "像這樣" 或 '像這樣'
+
+如果引號只有一個 看前後文有沒有文字 +
+前後都有文字 就直接使用 +
+有一邊沒有的話 要在引號前加反引號 +
+像這\'樣 -> 像這'樣  (who's ) +
+像這樣\`' -> 像這樣`' (werewolves`' ) +
+\`'像這樣 -> `'像這樣 (since the `'60s.)
+
+== 分行、分隔線、分頁
+
+=== 分行
+在段落那個章節有說到
+
+.Hard line break
+----
+Rubies are red, +
+Topazes are blue.
+
+[%hardbreaks]
+Ruby is red.
+Java is black.
+----
+
+=== 分隔線
+三個單引號 ( ' )
+
+.Thematic break (aka horizontal rule)
+----
+before
+'''
+after
+----
+=== 分頁
+三個小於符號 ( < ) +
+編譯成PDF或Word 等有分頁的檔案才有效果
+
+.Page break
+----
+<<<
+----
+
+== 清單 (List)
+
+
+
+=== 無序列清單(Unordered)
+
+==== 基本型
+以一個星號( * )表示 *+空格* 後直接寫內容 +
+* 像這樣 +
+
+* 像這樣1
+* 像這樣2
+* 像這樣3 
+
+==== 替代型
+我稱它為同一層型(等會兒解釋) +
+有時候星號用來表示其他事項時，可用減號 ( - )表示 +
+一樣以一個減號( - )表示 *+空格* 後直接寫內容 +
+- 像這樣
+
+- 像這樣1
+- 像這樣2
+//你是說像這樣嗎?
+- 像這樣3
+
+NOTE: 清單的前後須要緊鄰著空行，以和其他段落區隔
+
+NOTE: 若有兩個清單相鄰時，慣例以註解( // )來做區隔
+
+==== 巢狀無序列清單
+以多個星號( * )表示 *+空格* 後直接寫下階內容 +
+
+.for Example
+----
+* 像這樣
+** 然後這樣
+*** 接著這樣
+**** 繼續這樣
+***** 最後這樣(再多沒有了)
+- 如果接下來的內容都是同一層的話
+- 可以直接使用減號表示
+- 會自動被認為是下一層的內容
+* 另啟新局就像這樣
+----
+效果：
+
+* 像這樣 
+** 像這樣 
+*** 像這樣 
+**** 像這樣 
+***** 像這樣 
+****** 沒有六個啦 
+******* 七層要幹嘛啦 
+******** 不要亂喔
+********* asdf
+********** !#$%!^!$
+*********** 走開!!
+* 你看看你這樣好玩嗎?
+- asdf
+- asdf
+** 然後就這樣依此類推
+- asdf
+- asdf
+** asdf
+*** adsf
+- asdf
+
+=== 有序列清單(Ordered)
+
+==== 基本型
+以一個點( . )表示 +空格後直接寫內容 +
+. 像這樣
+
+. 像這樣
+. 像這樣
+. 像這樣
+
+==== 巢狀有序列清單
+
+. 步驟一
+. 步驟二
+.. 步驟二之一
+.. 步驟二之二
+... 步驟二之二之一
+.... 不要亂喔
+..... 你很煩
+...... 欸又從1開始
+....... 六層以後該不會都是1吧
+. 步驟三
+. 步驟四
+
+TIP: 想看看如果清單符號後面沒加空格的話會怎樣?
+
+=== 勾選清單(Checklistview)
+這裡先看個效果，做出來會像這樣子
+
+====
+* [*] checked
+* [x] also checked
+* [ ] not checked
+*     normal list item
+====
+首先他是清單嘛，所以開頭的星號不能少
+----
+* 
+* 
+* 
+----
+
+然後畫上格子
+----
+* [ ]
+* [ ]
+* [ ]
+----
+加上註記( * 或 x )
+----
+* [*]
+* [x]
+* [ ]
+----
+後面打上內容就完成了
+----
+* [*] 像這樣
+* [x] 像這樣
+* [ ] 這個沒勾
+----
+
+IMPORTANT: 沒有 [v]  !!!!!
+
+
+=== 文字描述(Description)
+使用兩個以上的冒號( : )來做成 縮排清單的效果 +
+像這樣
+----
+第一項:: 這樣子(單行)
+第二項:: 
+    或這樣子 (多行) +
+    或這樣子 (多行) +
+    或這樣子 (多行) +
+----
+
+第一項:: 這樣子(單行)
+第二項:: 
+    或這樣子 (多行) +
+    或這樣子 (多行) +
+    或這樣子 (多行) +
+    第二項第一目::: 
+    欸嘿 A_A
+    第二項第一目第一條::::
+    真的假的?
+    第二項第一目第一條第一款:::::
+    不要啦=_=玩不膩喔
+    第二項第一目第一條第一款第一個東西:::::
+    啦啦啦~
+
+WARNING: 可以看到第五層以後就會露出馬腳了 +
+所以在使用巢狀清單的時候盡量不要超過五層
+
+
+=== 問與答(Q&A)
+使用Description 加上段落前綴[qanda] + 
+並且會自動加上序號
+
+----
+[qanda]
+你覺得這樣怎麼樣?:: 
+我覺得不行 +
+我也覺得不行
+那這樣子好了?:: 嗯~ 真香~~
+----
+
+[qanda]
+你覺得這樣怎麼樣?:: 
+我覺得不行 +
+我也覺得不行
+那這樣子好了?:: 嗯~ 真香~~
+
+NOTE: 不管是單行描述或多行描述 +
+雙冒號後面的內容都會自動被換到下一行
+
+=== 綜合體
+就是以上幾種的應用啦~ +
+實際撰寫的時候就依照需求使用吧 +
+以下範例
+----
+Operating Systems::
+  Linux:::
+    . Fedora
+      * Desktop
+    . Ubuntu
+      * Desktop
+      * Server
+  BSD:::
+    . FreeBSD
+    . NetBSD
+
+Cloud Providers::
+  PaaS:::
+    . OpenShift
+    . CloudBees
+  IaaS:::
+    . Amazon EC2
+    . Rackspace
+----
+
+Operating Systems::
+  Linux:::
+    . Fedora
+      * Desktop
+    . Ubuntu
+      * Desktop
+      * Server
+  BSD:::
+    . FreeBSD
+    . NetBSD
+
+Cloud Providers::
+  PaaS:::
+    . OpenShift
+    . CloudBees
+  IaaS:::
+    . Amazon EC2
+    . Rackspace
+
+== 表格
+以. +文字來定義表格標題 +
+然後以一直槓 + 三個等號( |=== ) 做開始 +
+
+head 的部分 :  +
+以一直槓做開頭 後面加欄位名稱 +
+多個欄位再以一直槓分隔 +
+以一行寫完
+
+body 的部分 : +
+以一直槓做開頭 後面直接輸入欄位資料 +
+同一列第二欄資料 需換行再以直槓做開頭繼續打 +
+下一列資料以下一段落的第一個直槓開始
+
+最後一樣以一直槓 + 三個等號( |=== ) 做結束 +
+
+.範例表格
+|===
+| Column 1 | Column 2 | Column3
+
+|123
+|123
+|123
+
+|123
+|123
+|
+
+|===
+
+== 連結 (Links)
+
+=== 外部連結
+https://www.w3schools.com/js/js_ajax_http.asp[xxx]
+
+=== 內部連結
+
+
+== 插入圖片 (Images)
+
+== 插入影片
+
+== 插入程式碼
+
+== UI Marcos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
