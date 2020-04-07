@@ -1,3 +1,6 @@
+torr:
+  google-map-key: YOUR_LICENSE_KEY
+
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource

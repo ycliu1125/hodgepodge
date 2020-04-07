@@ -5,7 +5,6 @@ $(function () {
     initMap();
     setScenicSpots();
 
-
     // 設定塗層上的 legend
     var buttons = $('#buttons')[0];
     var legend = $('#select')[0];
