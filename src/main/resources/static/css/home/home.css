@@ -1,0 +1,11 @@
+.index-top-pic {
+    background-image: url(../../images/home/index/water-fire-dance.jpg);
+    background-position: left bottom;
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+
+.fakeimg {
+    height: 200px;
+    background: #aaa;
+}
