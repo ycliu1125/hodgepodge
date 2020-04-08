@@ -6,7 +6,8 @@
   <title>Simple Google Map</title>
   <meta name="viewport" content="initial-scale=1.0">
     <#include "*/includes/meta.ftl">
-  <script src="https://maps.googleapis.com/maps/api/js?key=${mapKey}&callback=initMap"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=${mapKey}&callback=initMap&libraries=visualization"></script>
+  <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
   <script src="<@spring.url "/js/home/map.js" />"></script>
   <link rel="stylesheet" href="<@spring.url "/css/home/map.css"/>">
 </head>
@@ -29,6 +30,7 @@
 </div>
 
 <div id="map"></div>
+<div id="capture"></div>
 
 </body>
 </html>

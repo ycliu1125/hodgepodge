@@ -1,9 +1,12 @@
 var map;
 var markers = [];
+var heatmapData = [];
 
 $(function () {
     initMap();
-    setScenicSpots();
+    // setScenicSpots();
+    // initKmlMap();
+    addGeoJson();
 
     // 設定塗層上的 legend
     var buttons = $('#buttons')[0];
@@ -46,28 +49,83 @@ function setScenicSpots() {
         function (data) {
             var i = 0;
             data.XML_Head.Infos.Info.forEach(function (info) {
+
                 i++;
-                if (i < 10) { //這裡只印10個點就好
-                    var marker = new google.maps.Marker({
-                        tist: {name: info.Name},
-                        position: {lat: info.Py, lng: info.Px},
-                        map: map
+                // if (i < 10) { //這裡只印10個點就好
+                var marker = new google.maps.Marker({
+                    tist: {name: info.Name},
+                    position: {lat: info.Py, lng: info.Px},
+                    map: map
+                });
+                // 添加事件監聽器
+                marker.addListener('click', function (data) {
+                    map.setZoom(15);
+                    map.setCenter(marker.getPosition());
+                    var infowindow = new google.maps.InfoWindow({
+                        content: marker.tist.name
                     });
-                    // 添加事件監聽器
-                    marker.addListener('click', function (data) {
-                        map.setZoom(15);
-                        map.setCenter(marker.getPosition());
-                        var infowindow = new google.maps.InfoWindow({
-                            content: marker.tist.name
-                        });
-                        infowindow.open(map, marker);
-                    });
-                    markers.push(marker);
-                }
+                    infowindow.open(map, marker);
+                });
+                markers.push(marker);
+                // }
+
+                // 熱度圖
+                // heatmapData.push(
+                //     new google.maps.LatLng(info.Py, info.Px)
+                // );
+
             });
+
+            // Marker叢集
+            var markerCluster = new MarkerClusterer(map, markers,
+                {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+
+            // 熱度圖
+            // var heatmap = new google.maps.visualization.HeatmapLayer({
+            //     data: heatmapData
+            // });
+            // heatmap.setMap(map);
         }
     );
 
+}
+
+// Displaying KML
+function initKmlMap() {
+    var src = 'https://developers.google.com/maps/documentation/javascript/examples/kml/westcampus.kml';
+
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: new google.maps.LatLng(-19.257753, 146.823688),
+        zoom: 2,
+        mapTypeId: 'terrain'
+    });
+
+    var kmlLayer = new google.maps.KmlLayer(src, {
+        suppressInfoWindows: true,
+        preserveViewport: false,
+        map: map
+    });
+    kmlLayer.addListener('click', function (event) {
+        var content = event.featureData.infoWindowHtml;
+        var testimonial = document.getElementById('capture');
+        testimonial.innerHTML = content;
+    });
+}
+
+function addGeoJson() {
+    $.getJSON("http://192.168.1.105/repo/temp/taiwan.json", function (data) {
+        var features = map.data.addGeoJson(data);
+
+        map.data.addListener('mouseover', function (event) {
+            map.data.overrideStyle(event.feature, {fillColor: 'red'});
+        });
+        map.data.addListener('mouseout', function (event) {
+            map.data.overrideStyle(event.feature, {fillColor: 'blue'});
+        });
+        map.data.addListener('click', function (event) {
+            console.log(event);
+        });
+    });
 }
 
 var myStyledMapJSON = [
