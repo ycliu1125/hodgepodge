@@ -1,0 +1,88 @@
+= Spring Boot 的第一堂課
+劉育辰 <torr@tist.com.tw>
+v0.1, 2020-04-13
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+== What is Spring Boot
+
+* 基於Spring4.0設計，不僅繼承了Spring框架原有的優秀特性，而且還通過簡化配置來進一步簡化了Spring應用程式的搭建和開發過程。
+
+== First Spring Boot Project
+
+=== 前置準備
+* 開發環境：
+** JDK/OpenJDK: 1.8 以上
+** 開發工具: IntelliJ IDEA Ultimate Edition
+** Maven: 3以上(由於IDEA已經整合Maven,使用IDEA 可以不用準備)
+
+NOTE: 開發工具設定請參考<<IDEA 設定>>
+
+=== step 1 建立新專案
+
+. File -> New -> Project... ->  選擇Spring Initializr +
+(也可以透過 link:https://start.spring.io/[Spring Initializr網頁] 來產生Spring Boot專案 )
+
+. 選擇好Project SDK 及 Initializr Service Url -> Next
+
+. 專案屬性說明：
+* Group: 所屬團體，後面加上 .名稱 , 例如: com.torr
+** 公司行號( com ),政府機關( gov ),組織單位( org )...
+
+* Artifact: 與Maven ArtifactId 一致 +
+為你的專案取個名字
+
+* Type : 專案管理工具 +
+這裡我們選擇Maven Project
+
+* Language: 程式語言 +
+選擇 Java, 除非你要寫的是別種語言
+
+* Packaging: 包裝後的檔案類型 +
+先選擇War 檔, 之後要寫Jar 檔再選Jar
+
+* Java Version: Java 版本 +
+先選擇 8 版，之後可能會直接上到14版 (LTS)
+
+* Version: 與Maven Version 命名一致 +
+沒什麼事先取0.0.1-SNAPSHOT 吧
+
+* Name: 專案名稱 +
+可與上面Artifact 一樣
+
+* Description: 專案描述 +
+簡單說明一下這個專案吧
+
+* Package: 專案預設package路徑 +
+通常我們只會留到組織名稱 com.torr
+
+* 好了就下一步
+
+. Dependency: Maven 的依賴管理 +
+如果確定自己要依賴什麼可以在這裡先選 +
+若是第一次建立建議先不要選,後面可以自己加
+
+. 最後是專案名、存放路徑確認 +
+確認後Finish 即可完成建立
+
+=== Maven 專案結構簡介
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
