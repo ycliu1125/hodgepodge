@@ -6,7 +6,10 @@ $(function () {
     initMap();
     // setScenicSpots();
     // initKmlMap();
-    addGeoJson();
+    // addGeoJson();
+    // initDirectionMap();
+    // distanceMatrix();
+    geoCoding();
 
     // 設定塗層上的 legend
     var buttons = $('#buttons')[0];
@@ -18,6 +21,11 @@ $(function () {
     $('#map-type').change(function () {
         map.setMapTypeId($(this).val());
     });
+
+    // 畫圖工具bar (drawingManager)
+    var drawingManager = new google.maps.drawing.DrawingManager();
+    drawingManager.setMap(map);
+
 
 });
 
@@ -39,7 +47,8 @@ function initMap() {
         }
     });
 
-    map.mapTypes.set('dark_mode', darkModeType)
+    map.mapTypes.set('dark_mode', darkModeType);
+
 }
 
 // 前10個 觀光景點
@@ -127,6 +136,59 @@ function addGeoJson() {
         });
     });
 }
+
+function initDirectionMap() {
+    var directionsService = new google.maps.DirectionsService();
+    var directionsRenderer = new google.maps.DirectionsRenderer();
+    var xxx = map;
+    directionsRenderer.setMap(xxx);
+    // 顯示步驟
+    directionsRenderer.setPanel(document.getElementById('directionsPanel'));
+
+    var start = '台中火車站';
+    var end = '勤美綠園道';
+    var request = {
+        origin: start,
+        destination: end,
+        travelMode: 'DRIVING'
+    };
+    directionsService.route(request, function (result, status) {
+        if (status === 'OK') { // 建議處理 200 就好了
+            console.log(result);
+            directionsRenderer.setDirections(result);
+        }
+    });
+}
+
+function distanceMatrix() {
+    var service = new google.maps.DistanceMatrixService();
+    service.getDistanceMatrix({
+        origins: ['台中火車站', '勤美綠園道'],
+        destinations: ['臺中公園', '中友百貨'],
+        travelMode: 'DRIVING'
+    }, function (result, status) {
+        if (status === 'OK') { // 建議處理 200 就好了
+            console.log(result);
+        }
+    });
+}
+
+function geoCoding() {
+    new google.maps.Geocoder().geocode(
+        {'address': '台中市北區太原路一段532號5樓之3'},
+        function (results, status) {
+            if (status === 'OK') { // 建議處理 200 就好了
+                map.setCenter(results[0].geometry.location);
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: results[0].geometry.location
+                });
+                console.log(results);
+            }
+        }
+    );
+}
+
 
 var myStyledMapJSON = [
     {

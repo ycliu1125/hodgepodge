@@ -1,0 +1,621 @@
+= Google Maps API 簡介
+劉育辰 <torr@tist.com.tw>
+v1.0, 2020-04-16
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+:imagesdir: images
+
+NOTE: 本篇簡介以link:https://developers.google.com/maps/documentation?hl=zh-tw[Google Maps 說明文件]貫穿全文。
+
+== 創建 Google Maps API
+
+=== 前置作業
+
+* 準備一個綁有信用卡的Google 帳號 +
+(基本上練習用的流量不足以用到付款，只是拿來申請用的，但還是需要多多注意，以免有所虧損。)
+
+=== Step.1 先去GCP 申請API
+
+. 登入預先準備好的google帳號，進到link:https://console.cloud.google.com/?hl=zh-TW[GCP]主頁
+* 補充：若之前已申請過且API服務已過期的同仁 +
+可以參考文末其他事項中 <<啟用服務>> 說明
+
+. 點選左上角 API與服務 > 資訊主頁
+
+. 上方導覽列 > [專案名稱]▼ > 新增專案 +
+建立一個範例專案並切換到該專案底下 +
+(機構可以不用選)
+
+. 點選上方 ＋啟用API和服務
+
+. 搜尋 Maps JavaScript API +
+進入 Maps JavaScript API 頁面 > 點選啟用 +
+啟用後會跳至你的 Maps JavaScript API 頁面
+
+* 補充: 主要是 Maps JavaScript API +
+Directions Api 導航用的 +
+Distance Matrix API 多點距離判斷 +
+Geocoding 地址轉座標... 等等 +
+其他可依自己需求 另外研究、使用 +
+
+. 選到 憑證 頁籤 +
+依照指示到 API 和服務中的憑證頁面
+
+. 點選上方 ＋建立憑證 > API 金鑰 +
+到這邊告一段落先停在這個畫面 +
+(暫時不用限制金鑰對話方塊直接關閉即可)
+
+=== Step.2 參考Google 官方文件並開始實作
+
+. 進到link:https://developers.google.com/maps/documentation?hl=zh-tw[Google Maps 說明文件] +
+選取上方 說明文件▼ > link:https://developers.google.com/maps/documentation/javascript/tutorial?hl=zh-tw[Maps JavaScript API]
+
+. 一開始Overview的部分往下找到 HelloWorld 範例 +
+我們拿這個當練習 +
+將程式碼複製貼到一個你習慣的文字編輯器並存檔成 html檔 +
+將原範例程式碼第32行中 YOUR_API_KEY 取代成Step.1 你產生的API金鑰
+
+. 可以在html 使用CDN 引用jQery 方便開發
+
+. 可以看到 html <body> 中 script 幫我們做的事 +
+其實就是個 initMap()方法，並針對你的map 變數做一些操作
+
+. Map物件相關參數可以參閱 說明文件中 > 參考資料頁籤 +
+API Reference > Maps > Maps 的文件解說+
+
+=== Step.3 開始增加一些功能
+
+* 在地圖上標記(marker) +
+指南 > Adding a Google Map with a Marker +
+在 Try it yourself 章節中有相關程式碼可以參考 +
+Marker物件相關參數一樣可以到 +
+參考資料 > API Reference > Drawing on the map > Marker 中查詢+
+
+* 指南 > Events 可以查到所有可以用的事件
+
+* 其他: markerclusterer (叢集標記) +
+當你發現用marker 會標記大量的點座標時，可以考慮用這個功能。
+
+=== 討論
+
+* 其他地圖工具: +
+link:https://www.tgos.tw/tgos/web/tgos_home.aspx[TGOS] (很爛) +
+開源免費 link:https://www.openstreetmap.org/[OpenStreetMap] +
+可以自己編輯地圖 link:https://www.mapbox.com/[Mapbox] +
+規模比較小收費比較高 圖資可以畫得很細(對map外觀很要求的話)
+
+* 自主練習: 把台灣的觀光景點打在地圖上 參考資料： https://data.gov.tw/dataset/7777
+
+=== 其他事項
+
+[[啟用服務]]
+* GCP服務已過期啟用方法：
+. 上方跳出免費試用期已過期，並要求升級帳戶的話，點選升級，API就可以使用了。
+. 試著把專案全部刪掉，重建一個新的，他就會自動吃這個有綁定信用卡的帳戶了。
+. GCP主頁左方帳單管理的部分，將專案綁定到有效的帳單帳戶即可。
+
+== 操作 Google Maps API
+
+=== 自主練習回顧
+
+* 觀光景點打點
+** 由於政府資訊網的json檔沒有開放跨域分享，這裡我們只能自己下載下來使用。 +
+公司同仁也有將這份json放在公司的link:http://192.168.1.105/repo/temp/scenic_spot_C_f.json[repo上]。 +
+有效期限：未知。
+
+** 程式碼部分: +
+使用getJSON 或 ajax 取得JSON物件後，利用foreach迴圈建出每個Marker及他的事件監聽器。
+
+    $.getJSON(
+        'http://192.168.1.105/repo/temp/scenic_spot_C_f.json',
+        function (data) {
+            var i = 0;
+            data.XML_Head.Infos.Info.forEach(function (info) {
+                i++;
+                if (i < 10) { //這裡只印10個點就好
+                    var marker = new google.maps.Marker({
+                        tist: { name: info.Name },
+                        position: { lat: info.Py, lng: info.Px },
+                        map: map
+                    });
+                    // 添加事件監聽器
+                    marker.addListener('click', function (data) {
+                        map.setZoom(15);
+                        map.setCenter(marker.getPosition());
+                        var infowindow = new google.maps.InfoWindow({
+                            content: marker.tist.name
+                        });
+                        infowindow.open(map, marker);
+                    });
+                    markers.push(marker);
+                }
+            });
+        }
+    );
+
+* InfoWindow
+** maps 裡面有提供link:https://developers.google.com/maps/documentation/javascript/infowindows[InfoWindow]的物件，可以用來顯示資訊。 +
+利用open() 方法把地圖及圖釘傳入，即可在點擊圖釘的時候顯示該位置資訊。
+
+    var infowindow = new google.maps.InfoWindow({
+        content: marker.tist.name
+    });
+    infowindow.open(map, marker);
+
+=== 控制地圖
+
+* 增加地圖上的控制按鈕 (放大(+)縮小(-)小黃人之類...)
+** 指南 > Controls > link:https://developers.google.com/maps/documentation/javascript/controls[Adding Controls to the Map 章節]
+** 程式碼部分 +
+在宣告Map 的時候增加control選項，值為boolean 型態，可依需求開啟/關閉。
+
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 23.546162, lng: 120.6402133 },
+        zoom: 8,
+        zoomControl: false,
+        mapTypeControl: true,
+        scaleControl: true,
+        streetViewControl: true,
+        rotateControl: true,
+        fullscreenControl: true,
+        //gestureHandling: 'none' //手勢處理；使用者會無法移動地圖，預設是greedy
+    });
+
+[[客製地圖]]
+=== 客製地圖
+
+** 指南 > link:https://developers.google.com/maps/documentation/javascript/styling[Start Styling your Map]
+> 拉到內文最底端 > 進入 Use the Maps Platform Styling Wizard +
+
+** 他會問你要新建一組(CREATE)或是修改生產過的(IMPORT) +
+> 依自己喜好調整 > FINISH > 產生一串JSON(他是一個陣列) > 在initMap()內包裝一個變數
+
+    var styledMapType = new google.maps.StyledMapType( 把JSON貼到這 );
+
+** 在JSON 陣列後面多 一個物件 , { name: '新地圖名稱' } +
+完成之後大概變這樣
+
+    var styledMapType = 
+        new google.maps.StyledMapType(
+             [ 你的JSON 陣列 ], 
+             {name: '你的地圖名字' }
+        );
+
+** 回到Map 宣告的部分加上下列屬性
+
+    mapTypeControlOptions: {
+        mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain', '自定義樣式名稱']
+    }
+
+** 在宣告Map 後增加下列方法，將自製的地圖放進mapTypes
+
+    map.mapTypes.set('自定義樣式名稱', styledMapType);
+
+NOTE: 這邊注意一下是否已將map 放到全域變數 +
+就可以透過js 下 map.setMapTypeId(' 樣式名稱') 來達到切換地圖的目的
+
+=== 自製地圖選擇器
+
+** mapTypes設完之後你會發現，要是之後有很多個樣式需要切換 +
+那畫面不就被那些按鈕占掉了嗎? +
+為了解決這個問題，我們才需要自製地圖選擇器
+
+** 指南 > link:https://developers.google.com/maps/documentation/javascript/adding-a-legend?hl=zh-tw[Custom Legends]
+> 範例程式碼又臭又長，不如我們自己簡單刻一個html 放到 Legend 上面吧
+
+** 首先 簡單刻個select 把需要切換的地圖選項加進去
+
+    <div id="select">
+        <select id="map-type">
+            <option value="roadmap">roadmap</option>
+            <option value="satellite">satellite</option>
+            <option value="hybrid">hybrid</option>
+            <option value="terrain">terrain</option>
+            <option value="styled_map">styled_map</option>
+            <option value="tgos">tgos</option>
+        </select>
+    </div>
+
+** 再來宣告一個變數指定為 select的DOM物件，並加到map.controls裡面 +
+(如果不加[0]會是jQuery物件, maps API 會吃不到)
+
+    var legend = $('#select')[0];
+    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
+
+** 建立事件監聽，切換地圖
+
+    $('#map-type').change(function () {
+        map.setMapTypeId($(this).val());
+    });
+
+NOTE: ControlPosition 可自行設定
+
+image::maps/2020-03-17/0317-01.png[caption="Figure 2.4.1 ",title="ControlPosition"]
+
+=== 換底圖 +
+
+仔細看地圖的頁面會發現地圖其實是由一格一格的圖磚(tile)所拼湊起來的 +
+換底圖的意思就像是在google 地圖的圖磚上 再蓋上一層別人做好的圖磚 +
+和上面講到的<<客製地圖>>有點不一樣 +
+
+** TGOS +
+(由於TGOS的圖磚需要金鑰，這裡key只能在公司使用)
+
+        var appId = 'vcELDKuSX/g1K/D/zs+9iVZxQAsxbJ6CB+imjX+8DKDl6MwKffCgeg==';
+        var key = 'cGEErDNy5yN/1fQ0vyTOZrghjE+jIU6uUgsn24cMbdLz7yAA1k5QzCLLL4RfyywT+r+Dpi2sDjZ1IkaQQrrJCsCLCTnRV1tBMeHsC1VbWyUl+9DGfzYcjkgHrrU9xe6CNjlLi3D0d4IsiJTQK2a/wytqvM2sG5fHCllFUoxEPd/1Sj6DEQyvz7ywC4SoiVj4NWgCKxUEdHVLnrHJZzNlT+vFpnZqS+vqQHifJtcWLguK0zAUU6QMbyx2AkYfwZHHbsqs26tIVgKYTCclFV38PrIk5mafFC2duqmgprTU7TIb3BmzNwFOpiobJoDqxCC3n9QA0rZGR2xoB9J5s5XCWMwRFFFqr+s+wo9F5zBmiho=';
+        var option = {
+          getTileUrl: function (coord, zoom) {
+            return `http://api.tgos.nat.gov.tw/TileAgent/TGOSMAP_W.aspx/GetCacheImage?APPID=` +
+              appId + '&APIKEY=' + key +
+              '&S=' + (20 - zoom - 1) +
+              '&X=' + coord.x + '&Y=' + (-1 - coord.y) + '&L=0';
+          },
+          tileSize: new google.maps.Size(256, 256),
+          maxZoom: 19,
+          minZoom: 8,
+          name: 'tgos'
+        };
+
+    mapTypeControlOptions: {
+        mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain','styled_map', 'tgos']
+    }
+    map.mapTypes.set('tgos', new google.maps.ImageMapType(option));
+
+** 通用版電子地圖
+
+    var nlscOption = {
+        getTileUrl: function (coord, zoom) {
+            return 'https://wmts.nlsc.gov.tw/wmts/EMAP' +
+                '/default/EPSG:3857/' + zoom + '/' + coord.y + '/' + coord.x;
+        },
+        tileSize: new google.maps.Size(256, 256),
+        maxZoom: 20,
+        minZoom: 0,
+        name: '通用版電子地圖'
+    }
+
+    mapTypeControlOptions: {
+        mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain','styled_map', 'tgos', 'nlsc']
+    }
+    map.mapTypes.set('nlsc', new google.maps.ImageMapType(nlscOption));
+
+=== 自訂Marker 圖片 (icon 屬性)
+
+    var marker = new google.maps.Marker({
+        tist: { name: info.Name },
+        icon: 'https://stickershop.line-scdn.net/stickershop/v1/sticker/280213598/android/sticker.png',
+        position: { lat: info.Py, lng: info.Px },
+        map: map
+    });
+
+    marker.addListener('click', function (data) {
+        map.setZoom(15);
+        map.setCenter(marker.getPosition());
+        marker.setIcon('https://stickershop.line-scdn.net/stickershop/v1/sticker/1691922/android/sticker.png');
+        var infowindow = new google.maps.InfoWindow({
+            content: marker.tist.name
+        });
+        infowindow.open(map, marker);
+    });
+
+=== 討論
+
+* 怎樣才算是一個好的地圖 ? +
+使用者體驗 -> 處理好你的地圖事件監聽器
+
+== Google Maps 更多地圖視覺化
+
+=== link:https://developers.google.com/maps/documentation/javascript/marker-clustering[Marker Clustering]
+
+** 因為Marker Clustering 是第三方套件，所以在html的部分先加上CDN
+
+    <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+
+** 因為MarkerClusterer的介面需要一個Map, marker陣列 和用來分級的圖片， 這裡我們用一個變數把全部的marker 裝起來，然後加上這段 (注意位置要放對，用ajax 取得景點並建立marker 的要放在回傳的方法裡面)。
+
+    var markerCluster = new MarkerClusterer(map, markers,
+            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+
+** 觀察一下這裡imagePath結尾只到 /m, 但是圖檔命名卻是 m1, m2, m3, m4, m5 +
+-> 原因是他會自動幫你分級 根據你地圖的縮放大小 決定要用哪一個叢集的圖片。 +
+-> 也因此你可以使用自己的圖片，只要命名原則符合他的規則即可。
+
+** 要看更詳細說明/功能請參閱看他自己的link:https://github.com/googlemaps/v3-utility-library[官方文件] +
+例如：半徑多少要集合成一個叢集
+
+=== link:https://developers.google.com/maps/documentation/javascript/heatmaplayer[Heatmap] (熱度圖)
+
+** 想使用熱度圖,引用 googleAPI 的<script>後面要加上這段
+
+    &libraries=visualization
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=${mapKey}&callback=initMap&libraries=visualization"></script>
+
+** 接著回到JS部分，建立一個變數來儲存熱度圖的資料
+
+    var heatmapData = [];
+
+** 此時我們在取得觀光景點的方法內，將觀光景點的座標放進heatmapData
+
+    heatmapData.push(
+        new google.maps.LatLng(info.Py, info.Px)
+    );
+
+** 蒐集完資料後，將熱度圖的圖層放上地圖
+
+    var heatmap = new google.maps.visualization.HeatmapLayer(
+        { data: heatmapData }
+    );
+    heatmap.setMap(map);
+
+** 更多熱度圖相關參數請參考link:https://developers.google.com/maps/documentation/javascript/heatmaplayer#customize_a_heatmap_layer[官方文件]
+
+NOTE: heatmap.setMap(map) 是將熱度圖的圖層，放到指定的map 上面， 如果想隱藏熱度圖，改為執行 heatmap.setMap(null) 就可以了。
+
+=== 地圖相關的公開標準
+
+* link:https://developers.google.com/maps/documentation/javascript/kml[KML]
+** 簡單來說就是一個XML，這裡有一份google 準備的KML 可以自己拉下來看看。
+
+    https://developers.google.com/maps/documentation/javascript/examples/kml/westcampus.kml
+
+** 那我們要怎麼將KML 資料show在地圖上呢?
+這裡我們使用官方的範例。 +
+首先，在html 的部分加上一塊<div>標籤
+
+    <div id="capture"></div>
+
+    <body>
+        <div id="map"></div>
+        <div id="capture"></div>
+        <script>
+          // 你的JS部分
+        </script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+        </script>
+  </body>
+
+** 然後JS 部分，建立一個方法，並在頁面載入時執行。
+
+    function initKmlMap() {
+        // 注入 kml 來源
+        var src = 'https://developers.google.com/maps/documentation/javascript/examples/kml/westcampus.kml';
+        // 宣告要使用的map
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: new google.maps.LatLng(-19.257753, 146.823688),
+            zoom: 2,
+            mapTypeId: 'terrain'
+        });
+        // 將kml資料 放入指定的map
+        var kmlLayer = new google.maps.KmlLayer(src, {
+            suppressInfoWindows: true,
+            preserveViewport: false,
+            map: map
+        });
+        // 加入事件監聽
+        kmlLayer.addListener('click', function (event) {
+            var content = event.featureData.infoWindowHtml;
+            var testimonial = document.getElementById('capture');
+            testimonial.innerHTML = content;
+        });
+    }
+
+NOTE: KML 的資料顯示出來，會跟Marker 的功能類似， 但是互動程度 跟marker 比起來差很多， 目前許多人還是喜歡用Marker。
+
+
+* WMS (Web Map Service)
+** 比較舊的格式，可以把它看成一張張圖片 +
+太吃資源沒有彈性,不是物件不好操作 +
+還要有專門的WMS Server才能做專門的事情 使用者體驗不佳 +
+不建議使用
+
+
+* geoJSON
+
+** 可以在link:http://geojson.io/#map=2/20.0/0.0[這裡]直接編輯你想要的地圖樣式， +
+並同步產生JSON資料
+
+** 回到JS 部分，這裡準備好了一份JSON，如下處理
+
+    $(function () {
+        initMap();
+        addGeoJson();
+    }
+
+    function addGeoJson() {
+        // 取得JSON資料
+        $.getJSON("http://192.168.1.105/repo/temp/taiwan.json", function (data) {
+            // 加入 geoJSON
+            var features = map.data.addGeoJson(data);
+            // 加入事件監聽
+            map.data.addListener('mouseover', function (event) {
+                map.data.overrideStyle(event.feature, {fillColor: 'red'});
+            });
+            map.data.addListener('mouseout', function (event) {
+                map.data.overrideStyle(event.feature, {fillColor: 'blue'});
+            });
+            map.data.addListener('click', function (event) {
+                console.log(event);
+            });
+        });
+    }
+
+NOTE: geoJSON可以做的事件很多，也可以在地圖上畫點線面的資料，相對KML彈性高出很多。 實務上會遇到的需求，基本都可以用geoJSON解決。
+
+== Google Maps 其他API
+
+IMPORTANT: 有些API的收費標準比較高，流量超過的話，可能會負擔大量費用，請評估後使用。
+
+[NOTE]
+--
+* 以下介紹的API 都是獨立的一個服務，需要到自己的GCP(Google Cloud Platform)自行啟用。
+* 因為都是獨立的API，各自都有自己API的寫法。但Google 也有將它們整合成一個Service， 以下示範都直接使用Service 的寫法。
+--
+
+=== link:https://developers.google.com/maps/documentation/javascript/directions[Directions API]
+
+** 導航用，會在地圖上顯示路線。
+** 程式碼部分 +
+
+    <body>
+        <div id="map"></div>
+        <div id="directionsPanel" style="float:right;width:30%;height:100%"></div>
+    </body>
+
+    $(function () {
+        initMap();
+        initDirectionMap();
+    }
+
+    function initDirectionMap() {
+        var directionsService = new google.maps.DirectionsService();
+        var directionsRenderer = new google.maps.DirectionsRenderer();
+        // 官方範例是使用芝加哥，這裡我們用之前自己建好的map
+        var map = map;
+        directionsRenderer.setMap(map);
+        // 顯示步驟
+        directionsRenderer.setPanel(document.getElementById('directionsPanel'));
+        // 建立相關參數
+        var start = '台中火車站'; // 可以打關鍵字讓他搜尋，也可以傳地址或座標
+        var end = '勤美綠園道';
+        var request = {
+            origin: start,
+            destination: end,
+            travelMode: 'DRIVING'
+        };
+        // 透過Servie.route方法送出我們的請求
+        directionsService.route(request, function(result, status) {
+            if (status == 'OK') { // 這裡建議處理 200 就好了
+                console.log(result); // 這裡我們把結果印出來看一下
+                directionsRenderer.setDirections(result);
+            }
+        });
+    }
+
+** request 相關參數
+*** 其中origin(起點)、destination(終點)及travelMode(導航模式)是必須給的
+*** 其他參數可以參考link:https://developers.google.com/maps/documentation/javascript/directions#DirectionsRequests[這裡]
+
+
+** result 物件
+*** 將結果的物件展開 > routes > 0 (第一筆) +
+> legs (路線陣列) > 0 (第一筆) > steps (步驟陣列)
+*** steps 就是導航中教你怎麼走的步驟，可以將各步驟再展開看更詳細的內容
+
+=== link:https://developers.google.com/maps/documentation/javascript/distancematrix[Distance Matrix API]
+
+** 距離矩陣，決定多個起點及終點，自動幫你計算起終點之間的距離及所需時間，再配合上面的導航，就可以幫你規劃路線啦。
+** 舉個例子：假設某人的家附近有三家醫院，就可以設定一個起點、三個終點，讓他去算哪個比較近/所需時間比較短...之類的。
+
+** 程式碼部分
+
+    $(function () {
+        initMap();
+        distanceMatrix();
+    }
+
+    function distanceMatrix() {
+        var service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+            origins: ['台中火車站', '勤美綠園道'],
+            destinations: ['臺中公園', '中友百貨'],
+            travelMode: 'DRIVING'
+        }, function (result, status) {
+            if (status === 'OK') { // 建議處理 200 就好了
+                console.log(result); // 一樣把result 印出來觀察一下
+            }
+        });
+    }
+
+** result 物件
+
+image::maps/2020-04-14/0414-01.png[caption="Figure 4.2.1 ",title="DistanceMatrix Result"]
+
+[[Geocoding]]
+=== link:https://developers.google.com/maps/documentation/javascript/geocoding[Geocoding API]
+
+** 地址轉座標
+
+** 程式碼部分
+
+    $(function () {
+        initMap();
+        geoCoding();
+    }
+
+    function geoCoding() {
+        new google.maps.Geocoder().geocode(
+            {'address': '台中市北區太原路一段532號'},
+            function (results, status) {
+                if (status === 'OK') { // 建議處理 200 就好了
+                    map.setCenter(results[0].geometry.location);
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location
+                    });
+                    console.log(results);
+                }
+            }
+        );
+    }
+
+** result 物件
+
+image::maps/2020-04-14/0414-02.png[caption="Figure 4.3.2 ",title="Geocoding Result"]
+
+=== link:https://developers.google.com/maps/documentation/javascript/geolocation[Geolocation API]
+
+** 座標轉地址
+** 基本上與<<Geocoding>> 差不多，這裡就不示範了。
+
+=== link:https://developers.google.com/maps/documentation/javascript/drawinglayer[Drawing Layer Library]
+
+** 繪圖套件，可以在地圖上標記位置及畫出線條、多邊形、圓形等圖案的功能。
+** 因為之前已經使用過的 圖像視覺化的Library +
+這裡要加載的時候 只需要在網址的library 部分 加上,drawing 就可以了，如下：
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=${mapKey}&callback=initMap&libraries=visualization,drawing">
+    </script>
+
+** JS 部分
+
+    $(function () {
+        initMap();
+        // 畫圖工具bar (drawingManager)
+        var drawingManager = new google.maps.drawing.DrawingManager();
+        drawingManager.setMap(map);
+    }
+
+** 通常直接使用不多，都是搭配其他功能使用， +
+例如： Drawing Event (畫完要幹嘛)
+
+** 在官方文件 繪圖事件的說明中有提到： +
+"When a shape overlay is created,..." +
+畫線、多邊形、圓形都是一種overlay
+
+    An {overlay}complete event (where {overlay} represents the overlay type, such as circlecomplete, polygoncomplete, etc). A reference to the overlay is passed as an argument.
+
+** 範例程式碼
+
+    google.maps.event.addListener(drawingManager, 'circlecomplete', function(circle) {
+        var radius = circle.getRadius();
+    });
+
+=== link:https://developers.google.com/maps/documentation/javascript/geometry[Geometry Library]
+
+** 地理資訊的運算/比較數值化的運算
+** 例如 兩點之間的距離, 某範圍內的xx資料, 面積
+** 詳細一點說明：要怎麼知道一張地圖上的某幾個點是不是在某一個圓形範圍裡面?
+*** 將某幾個點跟圓心的距離算出來 小於半徑的 就在範圍內
+*** 這件事就是Geometry 可以幫你做到的
+
+=== 自主練習
+
+* 用googleMap做一個颱風路徑圖
+** 地理資訊其實跟氣象有蠻高的配合
+** 簡單製作一個隨時間移動的marker +
+加一個 會跟隨時間越來越大的圓 -> 颱風路徑
