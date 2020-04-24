@@ -1,0 +1,47 @@
+= CodeReview
+劉育辰 <torr@tist.com.tw>
+v0.3, 2019-08-01
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+
+== Invocation of toString on an array
+* 說明：  +
+這段在IDEA 的建議會寫 Implicit call to 'toString()' on array returned by call to 'rtfContent.getBytes()' +
+getBytes() 回傳的型別是 byte[] +
+println()參數沒有byte[] 可以接，所以預設會使用toString() +
+-> 系統認為你要印出的是陣列裡面的內容
+-> 所以它建議使用Arrays.toString()
+-> 結論：要確定自己要寫進去的是啥
+
+== Store of non serializable object into HttpSession
+* 說明：
+
+== Write to static field from instance method
+* 說明：
+
+== Class doesn't override equals in superclass
+* 說明：
+
+== Switch statement found where default case is miissing
+* 說明： 就是 switch...case...語法沒有寫default 區塊
+* 討論： switch...case... 不是很待見
+
+== D'oh! A nonsensicial method invocation
+* 說明：
+
+== Possible null pointer derefreence
+* 說明：
+
+== Possible null pointer derefreence in method on exception path
+* 說明：
+
+== equals method overrides equals in superclass and may not be symmetric
+* 說明：
+
+== Code contains a hard coded reference to an absolute pathname
+* 說明：
