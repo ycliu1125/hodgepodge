@@ -1,6 +1,6 @@
 = CodeReview
 劉育辰 <torr@tist.com.tw>
-v0.3, 2019-08-01
+v0.87, 2020-04-28
 :experimental:
 :icons: font
 :sectnums:
@@ -10,38 +10,355 @@ v0.3, 2019-08-01
 
 
 == Invocation of toString on an array
+* 原程式碼及問題點
++
+[source, java]
+--
+try {
+    FileOutputStream out = new FileOutputStream(file);
+    kitt.write(out, doc, doc.getStartPosition().getOffset(), doc.getLength());
+    PrintStream output = new PrintStream(out);
+    out.close();
+    if (st == JFileChooser.APPROVE_OPTION) {
+        String rtfContent = out.toString();
+        System.out.println(rtfContent.toString()); // <1><2>
+        output.println(rtfContent.getBytes());  // <3>
+        output.println(file);
+        output.print(true);
+        output.close();
+    } // 略...
+} // 略...
+--
+<1> 多餘的toString()
+<2> 把 FileOutputStream 這個物件 toString() 的用意??
+<3> SpotBugs 標註的問題
+--
+--
 * 說明：  +
-這段在IDEA 的建議會寫 Implicit call to 'toString()' on array returned by call to 'rtfContent.getBytes()' +
+這段在IDEA 的提示會寫
++
+--
+Implicit call to 'toString()' on array returned by call to 'rtfContent.getBytes()'
+--
 getBytes() 回傳的型別是 byte[] +
 println()參數沒有byte[] 可以接，所以預設會使用toString() +
--> 系統認為你要印出的是陣列裡面的內容
--> 所以它建議使用Arrays.toString()
--> 結論：要確定自己要寫進去的是啥
+-> 系統認為你要印出的是陣列裡面的內容 +
+-> 所以它建議使用Arrays.toString() +
+
+* 修改後：
++
+--
+output.println(Arrays.toString(rtfContent.getBytes()))
+--
+
+* 結論：要確定自己要寫進去的是啥
+
+* 討論：
+. try-catch 的寫法 -> 改成try-with-resource ?
+. Java output 一個檔案的寫法
 
 == Store of non serializable object into HttpSession
-* 說明：
+* 原程式碼及問題點
++
+[source, java]
+--
+private queryCondition sQC; // <1>
+
+//將前端輸入之各項條件存入session
+private void saveQueryConditionToSession(HttpSession session, queryCondition pd){
+
+    // 略...
+
+    //將queryCondition存在Session
+    session.setAttribute("qc", sQC); // <2>
+}
+--
++
+[source, java]
+--
+package com.tist.bean;
+
+public class queryCondition { //<1>
+    // 略
+}
+--
+<1> 類別名稱沒大寫我就不說了
+<2> SpotBugs 標註的問題
+--
+--
+
+* 說明： 不要把非序列化的物件放到HttpSession 中 +
+
+* 修改後：
++
+[source]
+--
+package com.tist.bean;
+
+import java.io.Serializable;
+
+public class QueryCondition implements Serializable  {
+    // 略
+}
+--
+
+* 結論： 把它變成序列化物件就好啦！
+
+* 討論： 為什麼要序列化 ? +
+->  HttpSession保存了非序列化的物件，在HttpSession 鈍化或遷移時將會發生問題。 +
+** HttpSession鈍化是Tomcat優化策略的一種機制： +
+在用戶龐大的情況下，為了減少Session的開銷，
+Tomcat把不經常使用的Session物件臨時序列化到系統文件或數據庫系統中，當被使用時反序列化到內存中。
+** Session遷移在集群部署時為共享Session物件提供支持，如果不將物件序列化，在異構系統的時候可能會發生錯誤。
 
 == Write to static field from instance method
+* 原程式碼及問題點
++
+[source]
+--
+static boolean JavaProg;  //<1>
+JButton javabtn = new JButton("Java File"); //<1>
+
+javabtn.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent ae) {
+        JavaProg = true; // <2>
+        FirstFrame.dispose();
+        s.frame();
+        s.CallMenus();
+    }
+});
+
+--
+<1> 三小命名...
+<2> SpotBugs 標註的問題
+--
+--
 * 說明：
+
+* 修改後：
+
+* 結論：
+
+* 討論： static 用法
 
 == Class doesn't override equals in superclass
+* 原程式碼
++
+[source]
+--
+--
 * 說明：
+
+* 修改後：
+
+* 結論：
+
+* 討論：
 
 == Switch statement found where default case is miissing
-* 說明： 就是 switch...case...語法沒有寫default 區塊
-* 討論： switch...case... 不是很待見
+* 原程式碼
++
+[source]
+--
+for (ShareSatisfactionAnswer answer : ansList) {
+    switch (answer.getQuestion().getNo()) {
+        case "01":
+            questionIndex = 0;
+            break;
+        case "02":
+            questionIndex = 1;
+            break;
+    }
 
-== D'oh! A nonsensicial method invocation
-* 說明：
+    // 略...
+}
+--
+* 說明： switch case 語法沒有寫default 區塊
+
+* 修改後： 加上default 區塊
++
+[source]
+--
+switch (answer.getQuestion().getNo()) {
+    case "01":
+        questionIndex = 0;
+        break;
+    case "02":
+        questionIndex = 1;
+        break;
+    default:
+        questionIndex = 0;
+        break;
+}
+--
+或是去了解它的邏輯是否只會有 "01"/"02" 兩種情況 +
++
+[source]
+--
+if ("01".equals(answer.getQuestion().getNo())) {
+    questionIndex = 0;
+} else {
+    questionIndex = 1;
+}
+--
+
+* 結論： 該的寫就要寫。
+
+* 討論： switch case 語法 +
+試著改善下面這段程式
++
+[source]
+--
+public class Main {
+    public static void main(String[] args) {
+
+        Random r = new Random();
+        String result = r.nextBoolean() ? "A" : "B";
+
+        switch (result) {
+            case "A":
+                printA();
+                break;
+            case "B":
+                printB();
+                break;
+            default:
+                printSomething();
+                break;
+        }
+    }
+
+    public static void printA() {
+        System.out.println("A");
+    }
+
+    public static void printB() {
+        System.out.println("B");
+    }
+
+    public static void printSomething() {
+        System.out.println("SomeThing");
+    }
+}
+--
++
+[source]
+--
+public class Main {
+public static void main(String[] args) {
+
+        Random r = new Random();
+        String result = r.nextBoolean() ? "A" : "B";
+
+        Map<String, String> resultMap = new HashMap<>();
+        resultMap.put("A", "MapA");
+        resultMap.put("B", "MapB");
+        printResult(resultMap.get(result));
+    }
+
+    public static void printResult(String result) {
+        System.out.println(result);
+    }
+}
+--
+
+
 
 == Possible null pointer derefreence
+* 原程式碼
++
+[source]
+--
+--
 * 說明：
+
+* 修改後：
+
+* 結論：
+
+* 討論：
 
 == Possible null pointer derefreence in method on exception path
+* 原程式碼
++
+[source]
+--
+--
 * 說明：
+
+* 修改後：
+
+* 結論：
+
+* 討論：
 
 == equals method overrides equals in superclass and may not be symmetric
+* 原程式碼
++
+[source]
+--
+--
 * 說明：
 
+* 修改後：
+
+* 結論：
+
+* 討論：
+
 == Code contains a hard coded reference to an absolute pathname
+* 原程式碼
++
+[source]
+--
+--
 * 說明：
+
+* 修改後：
+
+* 結論：
+
+* 討論：
+
+== D'oh! A nonsensical method invocation
+* 原程式碼及問題點
++
+[source]
+--
+/**
+* 預設畫面
+*
+* @param queryContext 查詢相關設定
+* @param model        Model
+* @return 預設畫面樣板名稱
+*/
+@Override
+@RequestMapping(value = {UrlPattern.EMPTY, UrlPattern.INDEX})
+public String index(
+@ModelAttribute("queryContext") QueryContext queryContext,
+Model model) {
+
+    QueryContext context = (null != queryContext) ? queryContext : new QueryContext(); // <1>
+
+    // 略...
+    String appDateYear = ""; // <2>
+
+    // 略...
+
+    if (!Strings.isNullOrEmpty(appDateYear)) { // <2>
+        context.getConditions().put("appDateYear", appDateYear); // <3>
+    }
+    return getViewIndex();
+}
+--
+<1> mgov 之後有升級，某一版本之後就不用這樣寫了。
+<2> SpotBugs 標註的問題。
+<3> context.put()塞完也沒幹嘛就return 了。
+--
+--
+* 說明： 就是SpotBugs 笑你
+
+* 修改後： 推測String appDateYear  可能是從某地方取得，所以才有後來的判斷。 +
+但經過後續一些修改，可能需求被刪除了，漏刪了這些Code，導致這個問題。
+
+* 結論：邏輯請寫好，clean code 觀念很重要
