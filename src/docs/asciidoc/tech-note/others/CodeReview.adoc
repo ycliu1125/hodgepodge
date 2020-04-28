@@ -1,5 +1,5 @@
 = CodeReview
-劉育辰 <torr@tist.com.tw>
+趙祐祥 <sam@tist.com.tw>、劉育辰 <torr@tist.com.tw>
 v0.87, 2020-04-28
 :experimental:
 :icons: font
@@ -8,11 +8,11 @@ v0.87, 2020-04-28
 :toc-title: 大綱
 :sectanchors:
 
-
 == Invocation of toString on an array
+
 * 原程式碼及問題點
 +
-[source, java]
+[source,java]
 --
 try {
     FileOutputStream out = new FileOutputStream(file);
@@ -21,46 +21,70 @@ try {
     out.close();
     if (st == JFileChooser.APPROVE_OPTION) {
         String rtfContent = out.toString();
-        System.out.println(rtfContent.toString()); // <1><2>
-        output.println(rtfContent.getBytes());  // <3>
+        System.out.println(rtfContent.toString());
+        output.println(rtfContent.getBytes());  // <1>
         output.println(file);
         output.print(true);
         output.close();
-    } // 略...
-} // 略...
+    }
+    // 略...
+} catch{
+  // 略...
+}
 --
-<1> 多餘的toString()
-<2> 把 FileOutputStream 這個物件 toString() 的用意??
-<3> SpotBugs 標註的問題
+<1> SpotBugs 標註的問題
+
 --
 --
+
 * 說明：  +
 這段在IDEA 的提示會寫
 +
 --
 Implicit call to 'toString()' on array returned by call to 'rtfContent.getBytes()'
 --
+
 getBytes() 回傳的型別是 byte[] +
 println()參數沒有byte[] 可以接，所以預設會使用toString() +
 -> 系統認為你要印出的是陣列裡面的內容 +
 -> 所以它建議使用Arrays.toString() +
 
-* 修改後：
+* 修改後： 如果是要印出陣列內容的話
 +
 --
 output.println(Arrays.toString(rtfContent.getBytes()))
 --
 
-* 結論：要確定自己要寫進去的是啥
+* 結論：原作者寫的可能也沒有錯，就是要確定自己要寫進去的是什麼東西。(#範例#)
 
 * 討論：
-. try-catch 的寫法 -> 改成try-with-resource ?
-. Java output 一個檔案的寫法
+** try-catch 的寫法 -> 改成try-with-resource ?
++
+[source,java]
+--
+try (FileOutputStream out = new FileOutputStream(file);
+    PrintStream output = new PrintStream(out)) {
+
+    kitt.write(out, doc, doc.getStartPosition().getOffset(), doc.getLength());
+
+    if (st == JFileChooser.APPROVE_OPTION) {
+        String rtfContent = out.toString();
+        System.out.println(rtfContent);
+        output.println(Arrays.toString(rtfContent.getBytes()));
+        output.println(file);
+        output.print(true);
+    }
+    // 略...
+} catch{
+  // 略...
+}
+--
 
 == Store of non serializable object into HttpSession
+
 * 原程式碼及問題點
 +
-[source, java]
+[source,java]
 --
 private queryCondition sQC; // <1>
 
@@ -74,7 +98,7 @@ private void saveQueryConditionToSession(HttpSession session, queryCondition pd)
 }
 --
 +
-[source, java]
+[source,java]
 --
 package com.tist.bean;
 
@@ -84,6 +108,7 @@ public class queryCondition { //<1>
 --
 <1> 類別名稱沒大寫我就不說了
 <2> SpotBugs 標註的問題
+
 --
 --
 
@@ -105,13 +130,13 @@ public class QueryCondition implements Serializable  {
 * 結論： 把它變成序列化物件就好啦！
 
 * 討論： 為什麼要序列化 ? +
-->  HttpSession保存了非序列化的物件，在HttpSession 鈍化或遷移時將會發生問題。 +
+-> HttpSession保存了非序列化的物件，在HttpSession 鈍化或遷移時將會發生問題。 +
 ** HttpSession鈍化是Tomcat優化策略的一種機制： +
-在用戶龐大的情況下，為了減少Session的開銷，
-Tomcat把不經常使用的Session物件臨時序列化到系統文件或數據庫系統中，當被使用時反序列化到內存中。
+在用戶龐大的情況下，為了減少Session的開銷， Tomcat把不經常使用的Session物件臨時序列化到系統文件或數據庫系統中，當被使用時反序列化到內存中。
 ** Session遷移在集群部署時為共享Session物件提供支持，如果不將物件序列化，在異構系統的時候可能會發生錯誤。
 
 == Write to static field from instance method
+
 * 原程式碼及問題點
 +
 [source]
@@ -131,31 +156,88 @@ javabtn.addActionListener(new ActionListener() {
 --
 <1> 三小命名...
 <2> SpotBugs 標註的問題
+
 --
 --
-* 說明：
 
-* 修改後：
+* 說明：把static變數，用在不是static方法裡面，而且會去改變它的值
 
-* 結論：
+* 討論： static 用法 (#範例#)
 
-* 討論： static 用法
+== EqualsAndHashCode
 
-== Class doesn't override equals in superclass
+=== Class doesn't override equals in superclass
+
 * 原程式碼
 +
 [source]
 --
+public class CwtaWelfareDetail extends WelfareResultDetail {
+  // 略...
+}
+
 --
-* 說明：
+
+* 說明：繼承後沒覆寫 equals method
 
 * 修改後：
++
+[source]
+--
+public class CwtaWelfareDetail extends WelfareResultDetail {
 
-* 結論：
+    // 略...
+    @Override
+    public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof CwtaWelfareDetail)) return false;
+    if (!super.equals(o)) return false;
+    CwtaWelfareDetail that = (CwtaWelfareDetail) o;
+    return Objects.equals(idNo, that.idNo);
+    }
 
-* 討論：
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), idNo);
+    }
+}
+
+--
+
+=== equals method overrides equals in superclass and may not be symmetric
+
+* 原程式碼
++
+[source]
+--
+@Entity
+@Table(name = "tist_app_unParent_file_attach")
+@Data
+public class AppUnParentFileAttach extends AbstractEntity {
+    // 略...
+}
+--
+
+* 說明：子類別沒有覆寫equals()，也沒有明確表示 equals() 是否要使用父類別的屬性。
+
+* 修改後：
++
+[source]
+--
+@Entity
+@Table(name = "tist_app_unParent_file_attach")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class AppUnParentFileAttach extends AbstractEntity {
+    // 略...
+}
+--
+
+* 討論： (#範例#)
+** 為什麼要 覆寫equals()、hashCode() ?
 
 == Switch statement found where default case is miissing
+
 * 原程式碼
 +
 [source]
@@ -173,6 +255,7 @@ for (ShareSatisfactionAnswer answer : ansList) {
     // 略...
 }
 --
+
 * 說明： switch case 語法沒有寫default 區塊
 
 * 修改後： 加上default 區塊
@@ -191,6 +274,7 @@ switch (answer.getQuestion().getNo()) {
         break;
 }
 --
+
 或是去了解它的邏輯是否只會有 "01"/"02" 兩種情況 +
 +
 [source]
@@ -204,7 +288,7 @@ if ("01".equals(answer.getQuestion().getNo())) {
 
 * 結論： 該的寫就要寫。
 
-* 討論： switch case 語法 +
+* 討論： switch case 語法的改寫 +
 試著改善下面這段程式
 +
 [source]
@@ -217,30 +301,24 @@ public class Main {
 
         switch (result) {
             case "A":
-                printA();
+                printResult("ResultA")
                 break;
             case "B":
-                printB();
+                printResult("ResultB")
                 break;
             default:
-                printSomething();
+                printResult("ResultOthers")
                 break;
         }
     }
 
-    public static void printA() {
-        System.out.println("A");
-    }
-
-    public static void printB() {
-        System.out.println("B");
-    }
-
-    public static void printSomething() {
-        System.out.println("SomeThing");
+    public static void printResult(String result) {
+        System.out.println(result);
     }
 }
 --
++
+Map形式
 +
 [source]
 --
@@ -262,65 +340,8 @@ public static void main(String[] args) {
 }
 --
 
-
-
-== Possible null pointer derefreence
-* 原程式碼
-+
-[source]
---
---
-* 說明：
-
-* 修改後：
-
-* 結論：
-
-* 討論：
-
-== Possible null pointer derefreence in method on exception path
-* 原程式碼
-+
-[source]
---
---
-* 說明：
-
-* 修改後：
-
-* 結論：
-
-* 討論：
-
-== equals method overrides equals in superclass and may not be symmetric
-* 原程式碼
-+
-[source]
---
---
-* 說明：
-
-* 修改後：
-
-* 結論：
-
-* 討論：
-
-== Code contains a hard coded reference to an absolute pathname
-* 原程式碼
-+
-[source]
---
---
-* 說明：
-
-* 修改後：
-
-* 結論：
-
-* 討論：
-
 == D'oh! A nonsensical method invocation
+
 * 原程式碼及問題點
 +
 [source]
@@ -354,11 +375,13 @@ Model model) {
 <1> mgov 之後有升級，某一版本之後就不用這樣寫了。
 <2> SpotBugs 標註的問題。
 <3> context.put()塞完也沒幹嘛就return 了。
+
 --
 --
+
 * 說明： 就是SpotBugs 笑你
 
-* 修改後： 推測String appDateYear  可能是從某地方取得，所以才有後來的判斷。 +
+* 修改後： 推測String appDateYear 可能是從某地方取得，所以才有後來的判斷。 +
 但經過後續一些修改，可能需求被刪除了，漏刪了這些Code，導致這個問題。
 
 * 結論：邏輯請寫好，clean code 觀念很重要
