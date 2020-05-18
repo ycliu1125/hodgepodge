@@ -1,0 +1,59 @@
+= Annotation 
+劉育辰 <torr@tist.com.tw>
+v0.1, 2020-05-15
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+
+== Concept
+
+. Annotation (註解) 如同一張標籤，如同課本上用螢光筆標記起來的部分。
+主要是提醒或幫助你快速地理解被標註的物件的大致作用。
+
+. 註解不是程式碼的一部分，註解對於程式碼運行的效果沒有直接影響。
+
+== Create an Annotation
+
+=== syntax
+
+=== meta-annotation
+
+=== attributes
+
+== Reflection & Annotation
+
+
+
+== Conclusion
+
+* 官方文件
++
+[quote, 'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]']
+____
+Annotations, a form of metadata, provide data about a program that is not part of the program itself. Annotations have no direct effect on the operation of the code they annotate.
+____
+
+* 註解用處
+** 提供信息給編譯器，編譯器可以利用註解來探測錯誤和警告訊息
+** 編譯階段時的處理，軟體工具可以用來利用註解信息來生成代碼、Html文檔或者做其它相應處理。
+** 運行時的處理，某些註解可以在程序運行的時候接受代碼的提取
+** 當開發者使用Annotation 修飾了類別、方法、Field 等成員之後，這些 Annotation 不會自己生效，必須由開發者提供相應的代碼來提取並處理 Annotation 信息。這些處理提取和處理 Annotation 的代碼統稱為 APT（Annotation Processing Tool)。
+
+IMPORTANT: 現在，我們可以給自己答案了，註解有什麼用？ +
+給 編譯器 或者 APT 用的。
+
+
+== Reference
+
+. link:https://kknews.cc/code/agono4n.html[Java 註解（Annotation）你可以這樣學]
+
+
+
+
+
+
+
