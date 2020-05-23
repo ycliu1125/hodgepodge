@@ -12,6 +12,8 @@ v0.1, 2020-04-13
 
 * Spring Boot是基於Spring4.0設計，不僅繼承了Spring框架原有的優秀特性，而且還通過簡化配置來進一步簡化了Spring應用程式的搭建和開發過程。
 
+* Spring 為目前全球最多 Java 開發者使用的框架
+
 == First Spring Boot Project
 
 === 前置準備
@@ -23,7 +25,7 @@ v0.1, 2020-04-13
 
 NOTE: 開發工具設定請參考<<IDEA 設定>>
 
-=== step 1 建立新專案
+=== Step 1 建立新專案
 
 . File -> New -> Project... -> 選擇Spring Initializr +
 (也可以透過 link:https://start.spring.io/[Spring Initializr網頁] 來產生Spring Boot專案 )
@@ -33,34 +35,24 @@ NOTE: 開發工具設定請參考<<IDEA 設定>>
 . 專案屬性說明：
 * Group: 所屬團體，後面加上 .名稱 , 例如: com.torr
 ** 公司行號( com ),政府機關( gov ),組織單位( org )...
-
 * Artifact: 與Maven ArtifactId 一致 +
 為你的專案取個名字
-
 * Type : 專案管理工具 +
 這裡我們選擇Maven Project
-
 * Language: 程式語言 +
 選擇 Java, 除非你要寫的是別種語言
-
 * Packaging: 包裝後的檔案類型 +
 先選擇War 檔, 之後要寫Jar 檔再選Jar
-
 * Java Version: Java 版本 +
 先選擇 8 版，之後可能會直接上到14版 (LTS)
-
 * Version: 與Maven Version 命名一致 +
 沒什麼事先取0.0.1-SNAPSHOT 吧
-
 * Name: 專案名稱 +
 可與上面Artifact 一樣
-
 * Description: 專案描述 +
 簡單說明一下這個專案吧
-
 * Package: 專案預設package路徑 +
 通常我們只會留到組織名稱 com.torr
-
 * 好了就下一步
 
 . Dependency: Maven 的依賴管理 +
@@ -70,8 +62,24 @@ NOTE: 開發工具設定請參考<<IDEA 設定>>
 . 最後是專案名、存放路徑確認 +
 確認後Finish 即可完成建立
 
-=== Maven 專案結構簡介
+[NOTE]
+--
+有關Maven 相關的技術，之後會特別講解，這裡只大略簡介專案結構而已。
+--
 
+=== Step 2 POM檔簡介
+
+=== Step 3 yml檔簡介
+* freemarker設定
+
+=== Step 4 建立ftl
+
+=== Step 5 建立Controller
+
+== 成果
+
+[[IDEA設定]]
+== 補充：IDEA設定
 
 
 

@@ -145,7 +145,7 @@ A goal is a “unit of work” in Maven
 
 .plugin & goals
 [[image-hard-status-select]]
-image::images/maven/plugin&goals.png[plugin&goals]
+image::maven/plugin&goals.png[plugin&goals]
 
 perform -> [pluginId] : [goalId] +
 example -> archetype : create.
@@ -156,7 +156,7 @@ Lifecycle is an ordered sequence of phases involved in building a project. +
 Plugin goals can be attached to a lifecycle phase. +
 
 .phases & goals
-image::images/maven/phases&goals.png[phases&goals]
+image::maven/phases&goals.png[phases&goals]
 
 .Basic
 . validate +
@@ -208,9 +208,9 @@ Validates whether project is correct and all necessary information is available 
 NOTE: Executing a phase will first execute all proceeding phases in order, ending with the phase specified on the command line.
 
 .A lifecycle is a sequence of phases
-image::images/maven/lifecyclePhases.png[lifecyclePhases]
+image::maven/lifecyclePhases.png[lifecyclePhases]
 .Bound goals are run when their phases execute
-image::images/maven/phases&goals2.png[phases&goals2]
+image::maven/phases&goals2.png[phases&goals2]
 
 == Transfer Traditional Project to Maven Project
 
@@ -219,7 +219,7 @@ image::images/maven/phases&goals2.png[phases&goals2]
 . project structure
 . POM file
 
-image::images/maven/javaee&maven.png[javaee&maven]
+image::maven/javaee&maven.png[javaee&maven]
 
 === e2m-convert tool
 
