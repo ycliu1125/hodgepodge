@@ -8,11 +8,9 @@ v0.1, 2020-05-15
 :toc-title: 大綱
 :sectanchors:
 
-
 == Concept
 
-. Annotation (註解) 如同一張標籤，如同課本上用螢光筆標記起來的部分。
-主要是提醒或幫助你快速地理解被標註的物件的大致作用。
+. Annotation (註解) 如同一張標籤，如同課本上用螢光筆標記起來的部分。主要是提醒或幫助你快速地理解被標註的物件的大致作用。
 
 . 註解不是程式碼的一部分，註解對於程式碼運行的效果沒有直接影響。
 
@@ -20,21 +18,53 @@ v0.1, 2020-05-15
 
 === syntax
 
+* 跟介面的形式很像，只是前面多個@符號。
++
+[source,java]
+--
+public @interface MyAnnotation {
+
+}
+
+--
+
 === meta-annotation
 
-=== attributes
+* 用來標註 @interface 的Annotation，主要是用來指定範圍及作用目標。
+* meta-annotation 有以下五種：
+. @Retention
+. @Documented
+. @Target
+. @Inherited
+. @Repeatable
+
+=== field
+
+* Annotation 只有屬性沒有方法，但宣告時候需要以無參數方法形式宣告，例如：
++
+[source,java]
+--
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface MyAnnotation {
+
+    String name();
+
+}
+
+--
 
 == Reflection & Annotation
-
-
 
 == Conclusion
 
 * 官方文件
 +
-[quote, 'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]']
+[quote,'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]']
+
 ____
-Annotations, a form of metadata, provide data about a program that is not part of the program itself. Annotations have no direct effect on the operation of the code they annotate.
+Annotations, a form of metadata, provide data about a program that is not part of the program itself.
+Annotations have no direct effect on the operation of the code they annotate.
 ____
 
 * 註解用處
@@ -46,10 +76,11 @@ ____
 IMPORTANT: 現在，我們可以給自己答案了，註解有什麼用？ +
 給 編譯器 或者 APT 用的。
 
-
 == Reference
 
 . link:https://kknews.cc/code/agono4n.html[Java 註解（Annotation）你可以這樣學]
+. link:https://www.baeldung.com/java-custom-annotation[Creating a Custom Annotation in Java | Baeldung]
+. link:https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]
 
 
 
