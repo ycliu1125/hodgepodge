@@ -8,5 +8,19 @@ v0.1, 2020-05-15
 :toc-title: 大綱
 :sectanchors:
 
+== What is logback?
 
-== 觀念
+== Configuring logback
+
+=== logback-spring.xml
+
+=== <appender> details
+
+=== <logger> details
+
+== Conclusion
+
+== Reference
+
+. link:http://logback.qos.ch/[logback 官網]
+. link:https://juejin.im/post/5b51f85c5188251af91a7525[看完这个不会配置 logback ，请你吃瓜！]

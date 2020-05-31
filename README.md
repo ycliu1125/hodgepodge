@@ -6,5 +6,5 @@
 * asciidoctor-diagram
 
 ## 產生文件
-<code> asciidoctor -a data-uri -a stylesheet=stylesheets/colony.css -r asciidoctor-diagram mgov-pg.adoc
+<code> asciidoctor -a data-uri -a stylesheet=stylesheets/colony.css -r asciidoctor-diagram FILE_NAME.adoc
 </code>

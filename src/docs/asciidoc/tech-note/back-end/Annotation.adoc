@@ -1,6 +1,6 @@
 = Annotation 
 劉育辰 <torr@tist.com.tw>
-v0.1, 2020-05-15
+v1.0, 2020-05-31
 :experimental:
 :icons: font
 :sectnums:
@@ -185,7 +185,6 @@ private void checkIfMyAnnotation(Object object) {
 --
 <1> 以isAnnotationPresent 判斷是否有某一註解
 <2> 需要將field/ method setAccessible(true) 後才能操作
-
 
 == Conclusion
 
