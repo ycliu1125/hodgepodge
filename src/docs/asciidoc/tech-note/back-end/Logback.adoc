@@ -10,17 +10,584 @@ v0.1, 2020-05-15
 
 == What is logback?
 
+* Logback 是由 log4j 創始人設計的又一個開源日誌元件。 +
+* Logback 當前分成三個模組：
+** logback-core -> 核心模組，提供了關鍵的通用機制。
+** logback-classic -> 可視為 log4j 的改良版，並完整實現了SLF4J API
+** logback-access -> 與Servlet容器整合提供通過Http來訪問日誌的功能
+
 == Configuring logback
 
-=== logback-spring.xml
+=== dependency
 
-=== <appender> details
+* 目前最新版是1.3 alpha版，最多人使用還是1.2.3版(2020-06-01)。
++
+.logback-core
+[source,xml]
+--
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-core</artifactId>
+    <version>1.2.3</version>
+</dependency>
+--
++
+.logback-classic
+[source,xml]
+--
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.3</version>
+</dependency>
 
-=== <logger> details
+--
++
+.logback-access
+[source,xml]
+--
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-access</artifactId>
+    <version>1.2.3</version>
+</dependency>
 
-== Conclusion
+--
+
+NOTE: 目前知道 Lombok 也有實作 Slf4j，在使用時需要注意一下。
+
+=== logback.xml/ logback-spring.xml
+
+* 專案一般會吃logback.xml，欲使用spring action profile 分別日誌，須以logback-spring.xml命名。 +
+本篇會以 logback-spring.xml 做範例。
+
+** 在``<configuration>``下可以用``<springProperty>`` 標籤獲取 .yml/.property 設定值。 +
++
+.xml部分
+[source,xml]
+--
+<configuration>
+    <springProperty scope="context" name="log.profile" source="tist.log.profile"/>
+    <springProperty scope="context" name="log.level" source="tist.log.level"/>
+</configuration>
+--
++
+.yml部分
+[source,yml]
+--
+tist:
+  log:
+    profile: log
+    level: info
+--
+
+** 以``<springProfile>`` 標籤來決定使用的logger。 +
++
+[source]
+--
+<springProfile name="test,dev">
+    <logger name="com.tist" level="${log.level}">
+        <appender-ref ref="DEV_APPENDER"/>
+    </logger>
+</springProfile>
+
+<springProfile name="junit">
+    <logger name="com.tist.domain" level="${log.level}">
+        <appender-ref ref="JUNIT_APPENDER"/>
+    </logger>
+</springProfile>
+--
+
+* logback-spring.xml 基本結構
++
+[source,xml]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration  scan="true" scanPeriod="60 seconds" debug="false">
+
+    <appender>
+        <!-- 略... -->
+    </appender>
+
+    <logger>
+        <appender-ref/>
+    </logger>
+
+    <root>
+        <appender-ref/>
+    </root>
+
+</configuration>
+--
+
+==== <appender> details
+
+* 本篇的主角，也可以把它想像成一本本的日誌，每本日誌會定義：
+** 輸出方式(增加/刷新)
+** 過濾條件
+** 輸出檔案
+** 滾動策略
+** 編碼方式
+* 基本配置如下
++
+[source,xml]
+--
+<appender name="ENTITY_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${logging.level}</level>
+        </filter>
+        <file>
+            ${logging.path}/entity_log/Entity.log
+        </file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${logging.path}/%d{yyyyMMdd}_entity_log/Entity.log</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+--
+
+* <appender> 屬性:
+** name 決定這本日誌的名稱
+** class 有這三種
+*** ConsoleAppender -> 訊息只會輸出到console 端
+*** FileAppender -> 單純把訊息輸出到指定文件
+*** RollingFileAppender -> 先把訊息輸出到指定文件，符合某條件時，又將訊息記錄到其他文件。 +
+它是 FileAppender 的子類別。
+
+* <append> +
+日誌是否增加到文件尾端，true增加，false清空文件重寫，預設為true。
+
+* <filter> +
+就是過濾器，基本上是根據log level(層級)來過濾，並回傳``DENY``、``NEUTRAL``或``ACCEPT``其中之一。 +
+appender 有多個filter時，會按照配置順序執行。
+
+** 回傳值
+*** DENY：訊息被拒絕，不再經過任何filter。
+*** NEUTRAL：通過，並由下個filter接著處理，直到訊息被處理。
+*** ACCEPT：訊息被立即處理，不再經過任何filter。
+
+** class 有這兩種
+*** ThresholdFilter 臨界值過濾器，低於指定級別的訊息不會被記錄下來，高於等於指定級別的訊息會返回 ``NEUTRAL`` +
++
+[source,xml]
+--
+<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+    <level>INFO</level>
+</filter>
+--
+
+*** LevelFilter 指定級別過濾器，搭配``onMath``及``onMismatch``標籤接收或拒絕訊息。
++
+[source,xml]
+--
+<filter class="ch.qos.logback.classic.filter.LevelFilter">
+  <level>INFO</level>
+  <onMatch>ACCEPT</onMatch>
+  <onMismatch>DENY</onMismatch>
+</filter>
+--
+
+** log level (由低到高)： +
+all -> trace -> debug -> info -> warn -> error -> off
+
+* <file>
+** 用來指定想要輸出的檔名
+** 可以是相對路徑或絕對路徑
+** 如果上層目錄不存在會自動建立
+** 沒有預設值
+** appender class為 RollingFileAppender 時 file 子節點可有可無 +
+設置<file>可以為活動文件和歸檔文件指定不同的位置。
+
+* <rollingPolicy>
+** appender class為 RollingFileAppender 時 才需要配置
+** class 有很多種，每一種都有幾個特定的子節點需要設置
+*** TimeBasedRollingPolicy (最常用)
++
+[source,xml]
+--
+<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+    <FileNamePattern>
+        ${logging.path}/%d{yyyy-MM-dd}_log/MyEntity.log.
+    </FileNamePattern>
+    <MaxHistory>30</MaxHistory>
+</rollingPolicy>
+--
+
+**** 使用TimeBasedRollingPolicy 基本上都會有 %d{yyyy-MM-dd} 等時間語法
+**** <FileNamePattern> 輸出檔名的格式
+**** <maxHistory> 檔案保留天數
+
+*** SizeAndTimeBasedRollingPolicy (按檔案大小和時間滾動策略)
++
+[source,xml]
+--
+<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+    <fileNamePattern>mylog-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+    <maxFileSize>100MB</maxFileSize>
+    <maxHistory>60</maxHistory>
+    <totalSizeCap>20GB</totalSizeCap>
+</rollingPolicy>
+
+--
+
+*** FixedWindowRollingPolicy (我有看沒有懂R) +
+附上link:http://logback.qos.ch/manual/appenders.html#FixedWindowRollingPolicy[官方文件]
+
+*** SizeBasedTriggeringPolicy +
+通常搭配RollingPolicy一起使用，用於設置滾動的觸發條件
++
+[source,xml]
+--
+<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+    <maxFileSize>150</maxFileSize>
+</triggeringPolicy>
+--
+
+* <encoder>
+** 用來指定日誌的編碼，主要負責兩件事：
+*** 將日誌訊息轉成Byte[]
+*** 將Byte[] 寫到 outputStream
+** class 目前只有 ``PatternLayoutEncoder``
++
+[source,xml]
+--
+<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+    <charset>UTF-8</charset>
+</encoder>
+--
+
+** 常用pattern 配置
+*** %-4relative: 將輸出日誌記錄的時間，進行左對齊，寬度為4.
+*** %thread: 將輸出記錄日誌的執行序(線程)號
+*** %-5level: 輸出5個日誌級別，進行左對齊。
+*** %logger{35}: 輸出日誌記錄的logger名通常為類名,長度為35。
+*** %msg%n: 輸出應用程式提供的信息，並換行。
+
+==== <logger> details
+
+* 可以把它想像成決定要用哪一本日誌來寫的人
+
+* 基本配置如下
++
+[source,xml]
+--
+<logger name="com.tist.domain" level="${logging.level}" additivity="false">
+    <appender-ref ref="ENTITY_LOG" />
+</logger>
+--
+
+* <logger> 屬性
+** name -> 用來指定受此logger 約束的對象，可以是一個package 或一個 class。
+** level -> 設置記錄級別，這裡有多一個``INHERITED`` 可以使用，表示強制執行上級級別。
+** additivity -> 是否向上級logger 傳遞日誌訊息，預設為true。
+
+* <appender-ref>
+** 用來指定具體的appender
+** ref 屬性值即對應到 appender name屬性
+
+==== <root> details
+
+* 其實它就是根 logger，但root 只有 level 屬性，用來設置記錄級別
+
+* 基本配置如下
++
+[source,xml]
+--
+<root name="com.tist" level="${logging.level}" additivity="false">
+    <appender-ref ref="CONSOLE" />
+</root>
+--
+
+NOTE: 因此，通常會配置讓root 向console 輸出訊息，讓logger 負責輸出特定package/class的日誌
+
+==== <configuration> details
+
+* 除了 <appender>、<logger>及<root> 外還有<configuration>的屬性及幾項基本子節點值得提一下
+
+* <configuration> 屬性
+** scan -> 掃描當前配置文件，如果有改變會被重新加載，預設為true。
+** scanPeriod -> 掃描週期，可給時間單位(ex. 1 hour)，預設單位是秒，scan為true時此屬性才生效，預設值為60秒。
+** debug -> 預設為false。
+
+* <property>
+** xml 中用來定義變數的標籤，並以${propertyName}取得變數值
+** 只有兩個屬性
+*** name -> 變數名稱
+*** value -> 變數值
+** 範例：
++
+[source,xml]
+--
+<configuration>
+    <property name="myApplication" value="SuperLogSystem" />
+    <contextName> ${myApplication} </contextName>
+
+    <!-- 略... -->
+</configuration>
+--
+
+* <contextName> (這個也是我參悟很久的)
+** 用來區分不同應用程式的記錄。一旦設定，不能修改。預設值為 "default"。
+** 若同一伺服器下運行了不只一個應用程式，而他們又剛好使用的同一個檔名來記錄log的情況 +
+我們就可以用``<contextName>MyAppName</contextName>``來指定某一份log的名稱 +
+可以在 ``<encoder><pattern>``的部分以 ``%contextName`` 取得該值並輸出。
++
+[source,xml]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration  scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- 略... -->
+    <contextName>logback</contextName>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN_FORMAT}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="info" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_PATH}/%d{yyyy-MM-dd,aux}/logback.info.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="console" />
+        <appender-ref ref="info" />
+    </root>
+
+</configuration>
+--
+
+==== configuration sample
+
+[source,xml]
+--
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration  scan="true" scanPeriod="60 seconds" debug="false">
+
+    <springProperty scope="context" name="logging.level" source="tist.log.level"/>
+    <springProperty scope="context" name="logging.path" source="tist.log.path"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{HH:mm:ss.SSS} %-5level %logger{80} - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ENTITY_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>${logging.level}</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${logging.path}/%d{yyyyMMdd}_entity_log/Entity.log</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="com.tist.domain" level="${logging.level}" additivity="false">
+        <appender-ref ref="ENTITY_LOG"/>
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>
+--
+
+=== using logger
+
+* xml 配置完成後，只要在程式流程中取得Logger 物件並使用相對應層級的方法記錄內容即可
++
+[source,java]
+--
+@Controller("com.tist.web.admin.xxxController")
+@RequestMapping("/admin/xxx")
+public class XxxController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(XxxController.class); //<0>
+
+    @Autowired
+    private XxxService xxxService;
+
+    @GetMapping("/hello")
+    public String hello(){
+        LOGGER.info("XXX-SERVICE:info");
+        LOGGER.error("XXX-SERVICE:error");
+        xxxService.printLogToSpecialPackage();
+        return "hello spring boot";
+    }
+}
+--
+
+** ``LoggerFactory.getLogger(Class xxx)`` 其參數給的class 就會影響到 ``<encoder><pattern>``中 ``%logger`` 的值。 +
+** 參數符合<logger> 的name 屬性，以及紀錄方法的層級符合 <logger> 的level 屬性，就會被分配到該 logger 參考的 appender 進行記錄。
+
+* mgov-core-log 的範例：
++
+[source]
+--
+public void doAfterSave(AbstractEntity source) {
+
+    if (source.getClass().isAnnotationPresent(Logable.class)
+            && source instanceof LogableEntity) {
+        Logable logable = source.getClass().getAnnotation(Logable.class);
+
+        if (source.getCreateTime().equals(source.getModifyTime())
+                && (logable.value().equals(LogableOperation.ALL)
+                || logable.value().equals(LogableOperation.INSERT))) {
+
+            LogUtil.logByOperationAndLevel(
+                    LogableOperation.INSERT, logbackConfig.getLevel(), source);
+
+        } else if (!source.getCreateTime().equals(source.getModifyTime())
+                && (logable.value().equals(LogableOperation.ALL)
+                || logable.value().equals(LogableOperation.UPDATE))) {
+
+            LogUtil.logByOperationAndLevel(
+                    LogableOperation.UPDATE, logbackConfig.getLevel(), source);
+        }
+    }
+}
+--
++
+[source]
+--
+public static void logByOperationAndLevel(LogableOperation operation, String level, AbstractEntity source) {
+
+    Logger logger = LoggerFactory.getLogger(source.getClass());
+    switch (level.toLowerCase()) {
+        case "trace":
+            logger.trace(operation.getCode() + " - " + ((LogableEntity) source).toLog());
+            break;
+        case "debug":
+            logger.debug(operation.getCode() + " - " + ((LogableEntity) source).toLog());
+            break;
+        case "warn":
+            logger.warn(operation.getCode() + " - " + ((LogableEntity) source).toLog());
+            break;
+        case "error":
+            logger.error(operation.getCode() + " - " + ((LogableEntity) source).toLog());
+            break;
+        default:
+            logger.info(operation.getCode() + " - " + ((LogableEntity) source).toLog());
+            break;
+    }
+}
+--
+
+== 補充：pattern
+
+IMPORTANT: 所有關鍵字在使用的時候必須帶上"%"，"-"為對齊標誌
+
+[cols="1,3"]
+|===
+^|Conversion Word ^|Describe
+
+>|c{length} +
+lo{length} +
+logger{length} +
+|輸出logger所屬的類別名稱，通常就是所在類別的全名(含package)，參數為logger名保留長度，預設不填為全名。
+
+
+>|C{length} +
+class{length}
+| 和上面用法類似，輸出調用者的全名，性能較差，不推薦使用。
+
+>|contextName +
+cn
+| 輸出上下文名稱
+
+>|d{pattern} +
+date{pattern} +
+d{pattern, timezone} +
+date{pattern, timezone} +
+| 輸出日誌的列印時間
+
+>| caller{depth} +
+caller{depthStart..depthEnd} +
+caller{depth, evaluator-1, ... evaluator-n} +
+caller{depthStart..depthEnd, evaluator-1, ... evaluator-n}
+| Outputs location information of the caller which generated the logging event.
+
+>|L +
+line
+| Outputs the line number from where the logging request was issued. +
+性能較差不建議使用。
+
+
+>|m +
+msg +
+message
+| 應用程式提供的信息
+
+>|M +
+method
+|輸出執行日誌記錄的方法名稱，性能較差不建議使用。
+
+>|n
+|換行
+
+>|p +
+le +
+level
+| 輸出日誌級別
+
+>|r +
+relative
+|輸出自應用啟動到輸出該log信息耗費的毫秒數
+
+>|t +
+thread
+| 輸出列印日誌的(執行緒)線程名稱
+
+>|replace(p){r, t}
+| p為日誌內容，r是正則表達式，將p中符合r的內容替換成t。 +
+例如：%replace(%msg){'\s',''}，取代所有空白為空字串(移除所有空白)。
+
+|===
+
+* log配置顏色
+
+|===
+^|格式 ^|描述 ^|格式 ^|描述
+
+|%black |黑色
+|%red |紅色
+|%green |綠色
+|%yellow |黃色
+|%blue |藍色
+|%magenta |品紅
+|%cyan |青色
+|%white |白色
+|%gray |灰色
+|%highlight |高亮色
+
+|%bold
+3+|更鮮艷色顏色，強化以上所有的顏色，例如%boldRed, %boldBlack
+
+|===
 
 == Reference
 
 . link:http://logback.qos.ch/[logback 官網]
 . link:https://juejin.im/post/5b51f85c5188251af91a7525[看完这个不会配置 logback ，请你吃瓜！]
+. link:https://www.baeldung.com/logback[A Guide To Logback]
+. link:https://kknews.cc/zh-tw/code/ngq2oj3.html[java中如何使用logback最全的Logback快速實踐]

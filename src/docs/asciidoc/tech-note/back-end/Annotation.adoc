@@ -15,7 +15,6 @@ v1.0, 2020-05-31
 
 . 註解不是程式碼的一部分，註解對於程式碼運行的效果沒有直接影響。
 
-
 == Create an Annotation
 
 === syntax
@@ -30,6 +29,7 @@ public @interface MyAnnotation {
 --
 
 === meta-annotation
+
 * 用來標註 @interface 的Annotation，主要是用來指定範圍及作用目標。
 * meta-annotation
 +
@@ -77,6 +77,7 @@ A類別使用了被@Inherited標記的註解(@XXX)，當B類別繼承A時，B也
 ^.^| --
 
 |===
+
 ★ -> 通常這兩個一定會寫
 
 === field
@@ -89,7 +90,7 @@ A類別使用了被@Inherited標記的註解(@XXX)，當B類別繼承A時，B也
 @Target(ElementType.FIELD)
 public @interface MyAnnotation {
 
-    String name() default = "torr";
+    String name() default "torr";
 
 }
 --
@@ -133,12 +134,12 @@ public class PerformSomething {
 }
 --
 
-
 == How to use Annotation
 
 IMPORTANT: 注意這裡才是Annotation 的重頭戲。
 
 === Reflection
+
 * 前言 +
 前面提到：註解不是程式碼的一部分，對於程式碼運行的效果沒有直接影響。 +
 建立了註解之後，開發者必須撰寫相應的程式區塊進而提取並處理 Annotation 信息，該註解才有了真正意義上的用途。
@@ -156,29 +157,32 @@ IMPORTANT: 注意這裡才是Annotation 的重頭戲。
 
 * 簡單範例
 +
-[source, java]
+[source,java]
 --
-private void checkIfMyAnnotation(Object object) {
-    if (Objects.isNull(object)) {
-        throw new MyException("The object to serialize is null");
-    }
+public class MyAnnotationValidator {
 
-    Class<?> clazz = object.getClass();
-    if (!clazz.isAnnotationPresent(MyAnnotation.class)) { //<1>
-        // 你的處理...
-    }
-
-    for (Field field : clazz.getDeclaredFields()) {
-        if (field.isAnnotationPresent(JsonElement.class)) {  //<1>
-            field.setAccessible(true); // <2>
-            // do something...
+    private void checkIfMyAnnotation(Object object) {
+        if (Objects.isNull(object)) {
+            throw new MyException("The object to serialize is null");
         }
-    }
 
-    for (Method method : clazz.getDeclaredMethods()) {
-        if (method.isAnnotationPresent(Init.class)) { //<1>
-            method.setAccessible(true); // <2>
-            // do something...
+        Class<?> clazz = object.getClass();
+        if (!clazz.isAnnotationPresent(MyAnnotation.class)) { //<1>
+            // 你的處理...
+        }
+
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(JsonElement.class)) {  //<1>
+                field.setAccessible(true); // <2>
+                // do something...
+            }
+        }
+
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Init.class)) { //<1>
+                method.setAccessible(true); // <2>
+                // do something...
+            }
         }
     }
 }
@@ -190,7 +194,9 @@ private void checkIfMyAnnotation(Object object) {
 
 * 官方文件
 +
-[quote,'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]']
+[quote,'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]
+']
+
 ____
 Annotations, a form of metadata, provide data about a program that is not part of the program itself.
 Annotations have no direct effect on the operation of the code they annotate.
