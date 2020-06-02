@@ -9,6 +9,7 @@ v1.6, 2019-12-06
 :sectanchors:
 
 == What is IoC (Inversion of Control)
+
 * 一種設計原則
 * 目的是降低程式之間的耦合度
 * 實例依賴物件的控制流程 (Control Flow)，由主動變成被動。
@@ -28,26 +29,30 @@ Class A中用到了Class B的物件b，一般情況下，需要在A的代碼中�
 ****
 
 === Dependency Inject (DI)
+
 * 被動接收"要依賴的"物件
 * 建構子、Setter
 * 實作介面、抽象類別
 * Annotation
 
 === Dependency Lookup
+
 * 主動尋找"要依賴的"物件
 * 在需要的時候通過呼叫方法來取得物件，取得時提供相關的參數來確定取得物件的狀態
 
 == Spring IoC Container
+
 * 又稱：服務容器 Service Container
 * 實例化、配置及組裝元件，透過依賴注入(Dependency Injection)，提供服務給模組的地方。
 * 容器會讀取 Configuration Metadata 來取得要管理哪些Bean
 * Configuration Metadata 有三種表示法：
-    . XML 文件
-    . Java Annotation
-    . Java Code
+. XML 文件
+. Java Annotation
+. Java Code
 
 //Spring 提供的基本IoC 容器
 === org.springframework.beans
+
 * Interface BeanFactory
 * 最簡單的容器DI提供基本的支持和定義
 
@@ -57,8 +62,8 @@ GenericApplicationContext context = new GenericApplicationContext();
 new XmlBeanDefinitionReader(context).loadBeanDefinitions("services.xml", "daos.xml");
 --
 
-
 === org.springframework.context
+
 * Interface ApplicationContext
 * 比Beans 添加了更多的企業特定的功能
 
@@ -103,11 +108,11 @@ You should use an ApplicationContext unless you have a good reason for not doing
 
 |===
 
-
 == Bean
+
 In Spring, the objects that form the backbone of your application and that are managed by the Spring IoC container are called beans.
 
-A bean is an object that is instantiated, assembled, and otherwise managed by a Spring IoC container. 
+A bean is an object that is instantiated, assembled, and otherwise managed by a Spring IoC container.
 
 === Bean Definition 
 
@@ -133,9 +138,9 @@ A bean is an object that is instantiated, assembled, and otherwise managed by a 
 
 .Bean Scopes
 * singleton (Default) +
-    single instance per Spring IoC container
+single instance per Spring IoC container
 * prototype +
-    a single bean definition to have any number of object instances.
+a single bean definition to have any number of object instances.
 * request
 * session
 * Properties
@@ -143,9 +148,11 @@ A bean is an object that is instantiated, assembled, and otherwise managed by a 
 * websocket
 
 === Bean Lifecycle
-image::Spring Framework\Spring IoC\images\project-spring-bean-lifecycle-flowchart-architecture-guide-img1.jpg[]
+
+image::images\spring-ioc\project-spring-bean-lifecycle-flowchart-architecture-guide-img1.jpg[]
 
 ==== Initialization Callbacks
+
 實例化之後第一個被呼叫的方法 +
 兩種方式
 
@@ -153,6 +160,7 @@ image::Spring Framework\Spring IoC\images\project-spring-bean-lifecycle-flowchar
 . xml 配置 init-method 指定類別中void無參數方法名稱
 
 ==== Destruction Callbacks
+
 銷毀Bean之前最後一個被呼叫的方法 +
 一樣兩種方式
 
@@ -160,15 +168,17 @@ image::Spring Framework\Spring IoC\images\project-spring-bean-lifecycle-flowchar
 . xml 配置 destroy-method 指定類別中void無參數方法名稱
 
 ====
-If you use Spring’s IoC container in a non-web application environment (for example, in a rich client desktop environment), register a shutdown hook with the JVM. Doing so ensures a graceful shutdown and calls the relevant destroy methods on your singleton beans so that all resources are released. You must still configure and implement these destroy callbacks correctly. 
+If you use Spring’s IoC container in a non-web application environment (for example, in a rich client desktop environment), register a shutdown hook with the JVM. Doing so ensures a graceful shutdown and calls the relevant destroy methods on your singleton beans so that all resources are released.
+You must still configure and implement these destroy callbacks correctly.
 
 To register a shutdown hook, call the registerShutdownHook() method that is declared on the ConfigurableApplicationContext interface.
 ====
+
 建議不要使用InitializingBean或者DisposableBean的Callback， +
 因為XML配置提供相對靈活的方式，可自定義初始化、回收的方法。
 
-
 ==== Default Initialization and Destroy Methods
+
 如果你有過多的Bean初始化和銷毀或者具有相同名稱的方法，不需要聲明的初始化方法和銷毀方法在每一個bean上。相反框架提供了靈活使用<beans>元素default-init-method和default-destroy-method 屬性如下配置這樣的情況：
 
 [source]
@@ -188,8 +198,8 @@ To register a shutdown hook, call the registerShutdownHook() method that is decl
 --
 
 ==== BeanPostProcessor 
-實作BeanPostProcessor 介面可以實現自定義的實例化邏輯，依賴解析邏輯等，也可以以後在Spring容器實例化完畢。 
-注意實作後是針對所有的IoC Bean 在每個Bean初始化前、後都會執行某部分程式。
+
+實作BeanPostProcessor 介面可以實現自定義的實例化邏輯，依賴解析邏輯等，也可以以後在Spring容器實例化完畢。 注意實作後是針對所有的IoC Bean 在每個Bean初始化前、後都會執行某部分程式。
 
 .Class部分
 [source]
@@ -234,6 +244,7 @@ public class InitXXX implements BeanPostProcessor {
 --
 
 === Bean Definition Inheritance
+
 Spring Bean Definition的繼承與Java類的繼承無關，但概念是一樣的。
 
 [source]
@@ -285,11 +296,11 @@ Spring Bean Definition的繼承與Java類的繼承無關，但概念是一樣的
 --
 
 == Spring Dependency Injection
+
 主要分為兩種
 
 . 建構子注入 (Constructor Injection)
 . 設值方法注入 (Setter Injection)
-
 
 === Constructor Injection
 
@@ -377,6 +388,7 @@ public class Foo {
 --
 
 === Setter Injection
+
 基於setter DI由容器調用setter方法​​對bean調用無參數建構子或無參數static工廠方法實例化bean之後完成。
 
 .XML部分
@@ -401,6 +413,7 @@ public class Foo {
 --
 
 === Inner Beans
+
 承上例
 
 .XML 亦可寫成InnerBean形式
@@ -422,7 +435,6 @@ public class Foo {
 </beans>
 --
 
-
 [NOTE]
 --
 . 建構子注入 & Setter注入所使用的標籤不一樣，前者使用<constructor-arg>，後者則是<property>。
@@ -430,6 +442,7 @@ public class Foo {
 --
 
 === Collections
+
 <list/>, <set/>, <map/>, 和 <props/> 這四個元素分別對應到Java Collection 的 List, Set, Map, 和 Properties。
 
 [source]
@@ -496,6 +509,7 @@ public class Foo {
    <property name="email" value=""/>
 </bean>
 --
+
 等同於 exampleBean.setEmail("")
 
 [source]
@@ -504,6 +518,7 @@ public class Foo {
    <property name="email"><null/></property>
 </bean>
 --
+
 等同於 exampleBean.setEmail(null)
 
 [NOTE]
@@ -512,6 +527,7 @@ null 要用標籤設定
 --
 
 === p-namespace
+
 p- property
 
 .標準XML配置
@@ -558,16 +574,16 @@ p- property
 --
 
 === c-namespace
+
 c- constructor
-
-
 
 == Autowiring Collaborators
 
 === Autowiring modes
+
 * no +
 (Default) No autowiring. +
-必須明確地藉由<ref>屬性 來指定參考的Bean 
+必須明確地藉由<ref>屬性 來指定參考的Bean
 
 * byName +
 Autowiring by property name. +
@@ -584,9 +600,6 @@ If there are no matching beans, nothing happens (the property is not set).
 Analogous to byType but applies to constructor arguments. +
 If there is not exactly one bean of the constructor argument type in the container, a fatal error is raised.
 
-
-
-
 .Autowiring Limitations and Disadvantages
 ****
 .limitations and disadvantages
@@ -594,7 +607,6 @@ If there is not exactly one bean of the constructor argument type in the contain
 * You cannot autowire simple properties such as primitives, Strings, and Classes.
 * Autowiring is less exact than explicit wiring.
 * Wiring information may not be available to tools that may generate documentation from a Spring container.
-
 
 .sloves
 * Abandon autowiring in favor of explicit wiring.
@@ -604,8 +616,8 @@ If there is not exactly one bean of the constructor argument type in the contain
 ****
 
 === Autowiring byName
-Spring 會嘗試匹配需要注入的Bean中的屬性"名稱"與配置文件中相同的名稱定義的Bean。如果找到匹配項，它會注入這些bean，否則，它會拋出異常。
-仍然可以使用<property>標籤注入其餘屬性。
+
+Spring 會嘗試匹配需要注入的Bean中的屬性"名稱"與配置文件中相同的名稱定義的Bean。如果找到匹配項，它會注入這些bean，否則，它會拋出異常。 仍然可以使用<property>標籤注入其餘屬性。
 
 .標準XML配置
 [source]
@@ -651,9 +663,8 @@ Spring 會嘗試匹配需要注入的Bean中的屬性"名稱"與配置文件中�
 </beans>
 --
 
-
-
 === Autowiring byType
+
 Spring 會嘗試匹配需要注入的Bean中的屬性"類型"與配置文件中相同的類型定義的Bean。如果找到匹配項，它會注入這些bean，否則，它會拋出異常。 +
 仍然可以使用<property>標籤注入剩餘的參數。
 
@@ -702,6 +713,7 @@ Spring 會嘗試匹配需要注入的Bean中的屬性"類型"與配置文件中�
 --
 
 === Autowiring constructor
+
 與byType非常相似，但它應用於建構子參數。 +
 Spring 會嘗試匹配和連線它的建構子參數與Bean名稱相同，如果找到匹配項，它會注入這些bean，否則，它會拋出異常。 +
 仍然可以使用<constructor-arg>標籤注入剩餘的參數。
@@ -750,7 +762,6 @@ Spring 會嘗試匹配和連線它的建構子參數與Bean名稱相同，如果
 </beans>
 --
 
-
 == Annotation-based Container Configuration
 
 此時你的XML 需要配置<context:annotation-config/> 標籤 +
@@ -784,8 +795,8 @@ Spring 會將 屬性、方法和構造函數 自動注入。
 </beans>
 --
 
-
 === @Required
+
 適用於bean屬性的setter方法。 +
 受影響的bean屬性必須在配置時被寫在XML配置文件中，否則容器將拋出BeanInitializationException例外。 +
 一樣直接看個例子
@@ -854,6 +865,7 @@ public class MainApp {
 --
 
 === @Autowired
+
 適用於bean屬性的setter方法​​，非setter方法​​，建構子和屬性。 +
 @Autowired注解提供更精確地控制在何處以及如何使用自動裝配的時機。 +
 當Spring發現​使用@Autowired注解時，它會嘗試對對象進行byType的自動裝配。
@@ -867,6 +879,7 @@ PersonService personService;
 --
 
 ==== 用於Setter
+
 用法跟 @Required 相同，但使用@Autowired在Setter方法上，可省去XML中的<property>元素
 
 .XML部分
@@ -927,6 +940,7 @@ public class SpellChecker {
 --
 
 ==== 用於屬性
+
 使用@Autowired在屬性上，可省去Setter方法，即：
 
 [source]
@@ -974,6 +988,7 @@ public class TextEditor {
 --
 
 ==== 用於建構子
+
 使用@Autowired在建構子上，表示該類別在建構物件時，建構子參數會自動裝配。
 
 [source]
@@ -1019,8 +1034,8 @@ public class TextEditor {
 </beans>
 --
 
-
 === @Qualifier
+
 使用@Qualifier來指定確切的bean，避免混亂。 +
 通常@Autowired 想指定bean名稱時會搭配使用。
 
@@ -1119,17 +1134,19 @@ public class MainApp {
 }
 --
 
-
 === JSR-250 Annotations (CommonAnnotationBeanPostProcessor)
+
 Spring also supports injection by using the JSR-250 +
 @Resource、@PostConstruct和@PreDestroy
 
 ==== @Resource
+
 Default byName mode. +
 Used on fields or bean property setter methods. +
 
 .@Resource Injection Step
-. By default, Spring interprets that value as the bean name to be injected. In other words, it follows by-name semantics. +
+. By default, Spring interprets that value as the bean name to be injected.
+In other words, it follows by-name semantics. +
 . If no name is explicitly specified, the default name is derived from the field name or setter method. +
 . In the exclusive case of @Resource usage with no explicit name specified, @Resource finds a primary type match instead of a specific named bean.
 
@@ -1155,9 +1172,9 @@ public class Profile {
 }
 --
 
-
 ==== @PostConstruct和@PreDestroy
-offers an alternative to the lifecycle callback mechanism described in initialization callbacks and destruction callbacks. 
+
+offers an alternative to the lifecycle callback mechanism described in initialization callbacks and destruction callbacks.
 
 @PostConstruct -> Initialization Callbacks +
 @PreDestroy -> Destruction Callbacks
@@ -1273,7 +1290,6 @@ public static void main(String[] args) {
 }
 --
 
-
 === Using and Composing
 
 ==== basic using
@@ -1324,6 +1340,7 @@ Your Message : Hello World!
 --
 
 ==== beans dependency
+
 當其中某個@Bean 依賴另一個@Bean時 可如下配置：
 
 [source]
@@ -1381,6 +1398,7 @@ public static void main(String[] args) {
 --
 
 === Lifecycle Callbacks
+
 Any classes defined with the @Bean annotation support the regular lifecycle callbacks and can use the @PostConstruct and @PreDestroy. +
 
 The @Bean annotation supports specifying arbitrary initialization and destruction callback methods, much like Spring XML’s init-method and destroy-method attributes on the bean element, as the following example shows:
@@ -1405,8 +1423,8 @@ public class AppConfig {
 }
 --
 
-
 === Bean Scopes
+
 Spring includes the @Scope annotation so that you can specify the scope of a bean. +
 You can use any of the standard scopes specified in the Bean Scopes section. +
 
@@ -1424,9 +1442,9 @@ public class AppConfig {
 }
 --
 
-
 == Standard and Custom Events
-Event handling in the ApplicationContext is provided through the ApplicationEvent class and the ApplicationListener interface. + 
+
+Event handling in the ApplicationContext is provided through the ApplicationEvent class and the ApplicationListener interface. +
 If a bean that implements the ApplicationListener interface is deployed into the context, every time an ApplicationEvent gets published to the ApplicationContext, that bean is notified.
 
 [cols="1,2,3"]
@@ -1445,7 +1463,7 @@ As long as the context has not been closed, a refresh can be triggered multiple 
 
 |ContextStartedEvent
 |when the ApplicationContext is started by using the start() method
-|Here, “started” means that all Lifecycle beans receive an explicit start signal. 
+|Here, “started” means that all Lifecycle beans receive an explicit start signal.
 
 |ContextStoppedEvent
 |when the ApplicationContext is stopped by using the stop() method
@@ -1549,11 +1567,10 @@ ContextStoppedEvent Received
 </beans>
 --
 
-
-
 === Custom Events
 
-To publish a custom ApplicationEvent, call the publishEvent() method on an ApplicationEventPublisher. Typically, this is done by creating a class that implements ApplicationEventPublisherAware and registering it as a Spring bean.
+To publish a custom ApplicationEvent, call the publishEvent() method on an ApplicationEventPublisher.
+Typically, this is done by creating a class that implements ApplicationEventPublisherAware and registering it as a Spring bean.
 
 讓我們來看個例子
 
@@ -1649,11 +1666,10 @@ My Custom Event
 </beans>
 --
 
-
-
 [NOTE]
 --
-Spring’s eventing mechanism is designed for simple communication between Spring beans within the same application context. However, for more sophisticated enterprise integration needs, the separately maintained Spring Integration project provides complete support for building lightweight, pattern-oriented, event-driven architectures that build upon the well-known Spring programming model.
+Spring’s eventing mechanism is designed for simple communication between Spring beans within the same application context.
+However, for more sophisticated enterprise integration needs, the separately maintained Spring Integration project provides complete support for building lightweight, pattern-oriented, event-driven architectures that build upon the well-known Spring programming model.
 
 Spring事件處理是單執行緒的，所以如果一個事件被發布，除非所有的接收器都獲得訊息，否則該執行緒會被阻塞且流程將不會繼續。因此，如果要使用事件處理，應在系統設計時注意此議題。
 --

@@ -6,21 +6,61 @@ v0.1, 2020-05-15
 :sectnums:
 :toc: left
 :toc-title: 大綱
+:imagesdir: images/spring-aop/
 :sectanchors:
-
 
 == Concept
 
-. Aspect-oriented programming (AOP)
+* 切面導向程式設計(?)，反正中文不好懂，就直接叫AOP吧。
++
+image::aop-01.png[concept1,600,400]
 
-== Write with AOP
+* Java 是門蠻嚴謹的語言，要做到 AOP 需要一些技巧與技術，而 Spring AOP 則是提供了這類技術的一個框架，希望能省去 Java 開發者在進行 AOP 時的一些麻煩。
 
-== syntax
+* AOP Terminology
++
+[cols="1,5"]
+|===
+^|Terminology ^| Description
+
+^|★Aspect
+|A module which has a set of APIs providing cross-cutting requirements. +
+An application can have any number of aspects depending on the requirement. +
+
+^|Advice
+|Aspect的實作我們稱為Advice，Advice中包括了Cross-cutting concerns的行為或所要提供的服務(實作)。
+
+^|JoinPoint
+|在Method呼叫或離開的地方稱為JoinPoint，就是Advice在應用程式中被呼叫執行的時機，可能是某個方法被呼叫之前、之後，或是某個例外發生的時候。
+
+^|★Pointcut
+|是一個定義，藉由這個定義您可以指定某個Aspect在哪些Joinpoint時被應用至應用程式之上。
+
+^|Introduction
+|對於一個現存的類別，Introduction可以為其增加行為，而不用修改該類別的程式。
+
+^|Target object
+|一個Advice被應用的對象或目標物件。
+
+^|AOP proxy
+|AOP的實作有五個主要的策略： Dynamic Proxies、Dynamic Byte Code Generation、Java Code Generation、Use of a Custon Class Loader、Language Extensions。Spring的AOP主要是透過動態代理來完成。
+
+^|Weaving
+|Advice被應用至物件之上的過程稱之為縫合（Weave），在AOP中縫合的方式有幾個時間點：編譯時期（Compile time）、類別載入時期（Classload time）、執行時期（Runtime）。
+
+^|Cross-cutting concerns
+|類似於日誌這類的動作，如安全 （Security）檢查、交易（Transaction）等系統層面的服務（Service），在一些應用程式之中常被見到安插至各個物件的處理流程之中，這些動作在AOP的術語中被稱之為Cross-cutting concerns。
+|===
++
+image::aop-02.png[concept2,600,400]
+
+== Syntax
 
 == Conclusion
 
 == Reference
 
+* link:https://blog.csdn.net/qqXHwwqwq/article/details/51678595[Spring AOP順序]
 
 
 
