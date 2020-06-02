@@ -194,8 +194,7 @@ public class MyAnnotationValidator {
 
 * 官方文件
 +
-[quote,'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]
-']
+[quote,'https://docs.oracle.com/javase/tutorial/java/annotations/[Java 官方文件]']
 
 ____
 Annotations, a form of metadata, provide data about a program that is not part of the program itself.
