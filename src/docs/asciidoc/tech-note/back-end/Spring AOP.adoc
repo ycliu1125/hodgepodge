@@ -9,7 +9,7 @@ v0.1, 2020-05-15
 :imagesdir: images/spring-aop/
 :sectanchors:
 
-== Concept
+== 基本觀念及術語(Concept)
 
 * 切面導向程式設計(?)，反正中文不好懂，就直接叫AOP吧。
 +
@@ -53,15 +53,158 @@ An application can have any number of aspects depending on the requirement. +
 |===
 +
 image::aop-02.png[concept2,600,400]
++
+[NOTE]
+--
+* 寫在Advice 的實作根據Pointcuts, Weave 到 JointPoint上, 這樣稱為一個 Aspect
+* 滿足Pointcuts 規則的JointPoint 會被添加相應的 Advice
+--
 
-== Syntax
+== 語法(Syntax)
 
-== Conclusion
+=== 範例及解說
+
+* Maven Dependency
++
+[source,xml]
+--
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+--
+
+* 範例
++
+[source,java]
+--
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Before;
+
+@Aspect  // <1>
+@Component("com.tist.aspect.EntitySaveAspect") // <2>
+public class EntitySaveAspect {
+
+    @Resource
+    private TistLogbackConfig logbackConfig;
+
+    //<3>
+    @Pointcut(value = "execution(* com.tist.repository.BaseRepository.save(..)) " +
+            "&& args(com.tist.domain.AbstractEntity) && args(source)")
+    public void entitySave(AbstractEntity source) {
+
+    }
+
+    // <4>
+    @After(value = "entitySave(source)", argNames = "source")
+    public void doAfterSave(AbstractEntity source) {
+        // 略...
+    }
+
+    // <5>
+    @Before(value = "entitySave(source)", argNames = "source")
+    public void doBeforeSave(AbstractEntity source) {
+        // 略...
+    }
+
+    // <6>
+    @AfterReturning(value = "entitySave(source)", argNames = "source")
+    public void doBeforeSave(AbstractEntity source) {
+        // 略...
+    }
+
+    // <7>
+    @AfterThrowing(value = "entitySave(source)", argNames = "source")
+    public void doBeforeSave(AbstractEntity source) {
+        // 略...
+    }
+
+    // <8>
+    @Around(value = "entitySave(source)", argNames = "source")
+    public void doBeforeSave(ProceedingJoinPoint proceedingJoinPoint,AbstractEntity source) {
+        // 略...
+    }
+
+}
+--
+<1> 在Spring 中註冊此類為一 Aspect
+<2> 在Spring 中註冊此類為一 Component Bean 供 Spring AOP 調用
+<3> @Pointcut 決定哪個JointPoint要加入Advice, +
+需使用<<PointcutDesignators>>表示式(PCD, PCD expression) +
+(``*`` 任意, ``..`` 0或多個, ``+`` 必須是指定型態的子型態 ) +
+注意：方法的名稱必須是完整路徑
+<4> @After：在執行後切入。
+<5> @Before：在執行前切入。
+<6> @AfterReturning：在執行後切入並擷取返回值。
+<7> @AfterThrowing：在執行中拋出錯誤時切入。
+<8> @Around：在執行的前後插入， +
+需要引入``ProceedingJoinPoint proceedingJoinPoint``作為參數。
+
+[[PointcutDesignators]]
+=== Pointcut Designators
+
+* execution: 最主要的表示式，用來匹配方法執行的 Join Point。
+** 語法 ( ``?``表示可有可無) +
+``execution( [1]? [2] [3]? [4]([5]) [6]?)`` +
+*** [1] modifiers-pattern : 存取修飾字
+*** [2] ret-type-pattern : 回傳型別
+*** [3] declaring-type-pattern : 類別路徑
+*** [4] name-pattern : 方法名稱
+*** [5] param-pattern : 參數
+*** [6] throws-pattern : 例外類別
+
+* within: 必須是指定的型態，可用來取代某些 execution 模式
+* this: 指定代理物件的型態及變數名稱。
+* target: 指定目標物件的型態及變數名稱。
+* args: 指定引數的型態及變數名稱。
+* @target：目標物件必須擁有指定的標型。
+* @args：引數必須擁有指定的標註。
+* @within：必須擁有指定的標註。
+* @annotation：方法上必須擁有指定的標註。
+
+=== @Before @Around @After 執行順序
+
+==== JoinPoint 只有一個Aspect
+
+* 正常情況
++
+image::aop-03.png[order1,600,400]
+
+* 拋出例外
++
+image::aop-04.png[order2,600,400]
+
+==== JoinPoint 有多個Aspect的情況下
+
+[NOTE]
+--
+一個JoinPoint 同時有多個Aspect的情況下，執行的順序是隨機的。 +
+解法：
+
+. 實作org.springframework.core.Ordered 介面 並實作getOrder()方法
+. 在Aspect 上加 @Order Annotation
+
+Order值小者優先執行
+--
+
+* 整個來看
++
+image::aop-05.png[order3,600,400]
+
+== 討論及延伸
+
+* AOP 常常搭配Annotation 來作動
+* AOP 有點像Interceptor 與 Filter?
 
 == Reference
 
-* link:https://blog.csdn.net/qqXHwwqwq/article/details/51678595[Spring AOP順序]
-
+* link:https://docs.spring.io/spring/docs/5.2.7.RELEASE/spring-framework-reference/core.html#aop-api[Spring AOP 官方文件]
+* link:https://openhome.cc/Gossip/SpringGossip/AOPConcept.html[AOP 觀念與術語]
+* link:https://openhome.cc/Gossip/Spring/Pointcut.html[Pointcut 表示式]
+* link:https://blog.csdn.net/qqXHwwqwq/article/details/51678595[Spring 多個AOP執行先後順序]
+* link:https://blog.csdn.net/rainbow702/article/details/52185827[Spring AOP @Before @Around @After 等 advice 的執行順序]
 
 
 
