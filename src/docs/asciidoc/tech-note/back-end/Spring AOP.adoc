@@ -1,6 +1,6 @@
 = Spring AOP
 劉育辰 <torr@tist.com.tw>
-v0.1, 2020-05-15
+v1.0, 2020-07-15
 :experimental:
 :icons: font
 :sectnums:
