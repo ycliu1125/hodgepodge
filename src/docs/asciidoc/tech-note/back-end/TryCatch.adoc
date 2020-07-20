@@ -1,0 +1,212 @@
+= try-catch 探討
+劉育辰 <torr@tist.com.tw>
+v0.8, 2020-07-20
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+
+== 前言
+
+* 為什麼你要寫try-catch 區塊? +
+[.line-through .small]#噢! 現在IDE都很強，它提示我要寫我就寫了...#
+
+
+== Exception
+* link:https://docs.oracle.com/javase/8/docs/api/index.html?overview-summary.html[Java SE8 Reference Document]
++
+.Java Exception Tree
+[ditaa]
+....
+
++---------------------+ 
+| java.lang.Throwable |  才可以被 throw/catch
++---------------------+
+        |   +-----------------+
+        +---| java.lang.Error | 
+        |   +-----------------+
+        |       |   +--------------------------+
+        |       +---| java.lang.AssertionError |
+        |       |   +--------------------------+
+        |       |   +------------------------+
+        |       +---| java.lang.LinkageError |
+        |       |   +------------------------+
+        |       |       |   +--------------------------------+
+        |       |       +---| java.lang.NoClassDefFoundError |
+        |       |       |   +--------------------------------+
+        |       |       |   +---------------------------------------+
+        |       |       +---| java.lang.ExceptionInInitializerError |
+        |       |       |   +---------------------------------------+
+        |       |       |   +--------------------------------+
+        |       |       +---| java.lang.UnsatisfiedLinkError |
+        |       |       |   +--------------------------------+
+        |       |       ... 
+        |       |       
+        |       |   +-----------------------+
+        |       +---| java.lang.ThreadDeath |
+        |       |   +-----------------------+
+        |       |   +-------------------------------+
+        |       +---| java.lang.VirtualMachineError |
+        |       |   +-------------------------------+
+        |       |       |   +-------------------------+
+        |       |       +---| java.lang.InternalError |
+        |       |       |   +-------------------------+
+        |       |       |   +----------------------------+
+        |       |       +---| java.lang.OutOfMemoryError |
+        |       |       |   +----------------------------+
+        |       |       |   +------------------------------+
+        |       |       +---| java.lang.StackOverflowError |
+        |       |       |   +------------------------------+
+        |       |       |   +------------------------+
+        |       |       +---| java.lang.UnknownError |
+        |       |           +------------------------+
+        |       |       
+        |       |   +-----------------+
+        |       +---| java.io.IOError |
+        |       |   +-----------------+
+        |       ... 
+        |       
+        |
+        |   +---------------------+
+        +---| java.lang.Exception |  基本上都要進行catch 並處理
+            +---------------------+
+                |   +----------------------------+
+                +---| java.lang.RuntimeException | (Unchecked) 
+                |   +----------------------------+
+                |       |   +--------------------------------+
+                |       +---| java.lang.NullPointerException |
+                |       |   +--------------------------------+
+                |       |   +------------------------------+
+                |       +---| java.io.UncheckedIOException |
+                |       |   +------------------------------+
+                |       ...
+                |
+                |                                           
+                |   ------------------------------ ↓ (Checked) ↓ ----------
+                |
+                |   +--------------------------------+
+                +---| java.lang.InterruptedException |
+                |   +--------------------------------+
+                |   +--------------------------------------+
+                +---| java.lang.CloneNotSupportedException |
+                |   +--------------------------------------+
+                |   +----------------------------------------+
+                +---| java.lang.ReflectiveOperationException |
+                |   +----------------------------------------+
+                |   +---------------------+
+                +---| java.io.IOException |
+                |   +---------------------+
+                |   +-----------------+
+                +---| CustomException |
+                |   +-----------------+
+                ...
+                
+....
+<1> 非受檢例外，通常是可以透過撰寫相應程式以避免的邏輯錯誤，compile 時並不會強制要求 catch。
+<2> 受檢例外，在原始碼中必須"顯式"地 catch 並且處理，compile 時會檢查。
+
+== 探討幾個問題
+
+=== 以下程式碼有那些不太好的寫法?
+
+* source 
++
+[source]
+--
+try {
+  // Execute business logic here ...
+  Thread.sleep(1000L);
+} catch (Exception ex) {
+
+}
+--
+
+* 應該要捕捉特定的例外 +
+例如 Thread.sleep() 會拋出的就是 InterruptedException
+
+* 必須要保證程式不會捕捉到不在我們預期範圍內的例外. 
+
+* 絕對不要把例外吞掉!!!
+
+=== 拋 還是 抓?
+
+* 如果方法設計流程中可能引發例外，而你設計時並 ``沒有充足的資訊知道該如何處理`` (例如不知道程式庫會用在什麼環境)，那麼可以拋出例外，讓呼叫方法的客戶端來處理。例如：
++
+[source, java]
+--
+public class FileUtil {
+    public static String readFile(String name) throws FileNotFoundException {
+        StringBuilder builder = new StringBuilder();
+        Scanner scanner = new Scanner(new FileInputStream(name));
+        while(scanner.hasNext()) {
+            builder.append(scanner.nextLine());
+            builder.append('\n');
+        }
+        return builder.toString();
+    }
+}
+--
++
+throws宣告部份，會是API操作介面的一部份，客戶端不用察看原始碼，從API文件上就能直接得知，該方法可能拋出哪些例外。
+
+[IMPORTANT]
+--
+* 拋出的是受檢例外，表示你認為客戶端有能力且應處理例外，此時必須在方法上使用throws宣告。
+* 拋出的是非受檢例外，表示你認為客戶端呼叫方法的時機出錯了，拋出例外是要求客戶端修正這個臭蟲或準備好前置條件，再來呼叫方法。
+
+--
+
+=== 繼承時
+
+* 父類別某個方法宣告throws某些例外，子類別重新定義該方法時可以：
+** 不宣告throws任何例外
+** 可throws父類別該方法中宣告的某些例外
+** 可throws父類別該方法中宣告例外之子類別
+
+* 但是不可以：
+** throws父類別方法中未宣告的其它例外
+** throws父類別方法中宣告例外之父類別
+
+=== printStackTrace() 有什麼問題?
+
+* Prints this throwable and its backtrace to the standard error stream. 
+** standard error 基本上不會是一種好的 output 管道, 因為你很難知道到底會輸出到哪裡去. +
+這種問題在分布式系統或是高度容器化的微服務系統中更為明顯. +
+發生了例外, 但是又看不到 stack trace, 這就是在為 debug 作業埋雷.
+
+* printStackTrace() 造成伺服器當機
+
+* 不用 printStackTrace() 要怎麼知道錯什麼? 又錯在哪裡?
+** 自訂例外
+
+=== 拋的「準」及拋的「好」
+
+* 準 — 例外發生時能精準定位到錯誤的行數 +
+代表從工程師的角度要能夠準確的 debug 
+
+* 好 — 例外發生時能清楚知道商業邏輯發生什麼事 +
+代表的是要能夠知道在整個營運層面發生了什麼事
+
+== 實際上
+
+. 開發者是否能夠掌握、理解那些應用較為廣泛的子類別 ?
+
+. 如何自定義例外 
+** 定義明確的名稱
+** 保證提供足夠的訊息，同時也要避免包含敏感資訊
+
+. 理解 Java 中操作 Throwable 的方式與實踐
+** try-catch-finally, throw, throws 等關鍵字運用
+** 怎麼處理一些典型的情境
+
+. try-with-resources 以及 multiple catch
+
+
+== Reference
+
+* link:https://docs.oracle.com/javase/8/docs/api/index.html?overview-summary.html[Java SE8 Reference Document]
+* link:https://medium.com/@clu1022/java%E7%AD%86%E8%A8%98-exception-%E8%88%87-error-dbdf9a9b0909[Java筆記 — Exception 與 Error]
+* link:https://openhome.cc/Gossip/Java/Throw.html[要抓還是要拋？ - OpenHome.cc]
+

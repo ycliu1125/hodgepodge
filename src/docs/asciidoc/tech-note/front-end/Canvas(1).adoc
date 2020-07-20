@@ -1,0 +1,408 @@
+= Canvas 初探
+劉育辰 <torr@tist.com.tw>, 趙祐祥 <sam@tist.com.tw>
+v0.1 , 2020-07-18
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+:imagesdir: images/canvas/
+
+== What is Canvas?
+
+* 畫布
+* html5 元素
+* 利用腳本程式在這個元素上繪畫(通常是JS)
+
+[source, html]
+--
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+
+    <div>
+        <canvas id="canvas" width="400" height="400">
+        </canvas>
+    </div>
+
+</body>
+</html>
+--
+
+== SVG
+
+* 可縮放向量圖形（Scalable Vector Graphics)
+* 由W3C制定的一個開放標準。基於可延伸標記式語言（XML），用於描述二維向量圖形的圖形格式。
+* svg 以文字編輯器打開會看到 <svg></svg>
+* svg 圖檔預設會用瀏覽器開啟
+
+image::Bitmap_VS_SVG.svg[]
+
+== Let's draw
+
+=== Rendering Context
+
+* 首先我們要取得畫布及渲染環境
++
+.html
+[source, html]
+--
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+    window.onload = function(){
+
+        // step 1. 取得渲染環境 (Rendering Context)
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        
+    };
+</script>
+
+</head>
+<body>
+
+    <div>
+        <canvas id="canvas" width="400" height="400">
+        </canvas>
+    </div>
+
+</body>
+</html>
+--
+
+* 座標
++
+image::Canvas_default_grid.png[]
+
+=== link:https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D[Canvas API]
+
+* beginPath()
+* moveTo(x, y)
+* path API
+* closePath()?
+* stroke()
+* fill()
+
+
+=== 畫線 (line)
+
+* lineTo(x, y)
++
+.正三角形
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.beginPath();
+    ctx.moveTo(100, 300);
+    ctx.lineTo(300, 300);
+    ctx.lineTo(200, 300-100*Math.sqrt(3));
+
+    ctx.closePath();
+    ctx.stroke();
+
+};
+
+--
+
+
+=== 畫弧(圓) (arc)
+
+* arc(x, y, radius, startAngle, endAngle, anticlockwise) +
+指定起始點座標、半徑、起始徑度、結束徑度、是否逆時針
++
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.beginPath();
+    ctx.moveTo(300, 200);
+    ctx.arc(200, 200, 100, 0, 2*Math.PI);
+
+    ctx.closePath();
+    ctx.stroke();
+
+};
+
+--
+
+* arcTo(x1, y1, x2, y2, radius) +
+決定兩點座標(control point)及半徑，與起始座標(start point)，形成兩條線的內切圓。 +
+弧的起始點與start point會以直線連接。
+
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.strokeStyle = 'gray';
+    ctx.lineWidth = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(200, 200);
+    ctx.lineTo(200, 300);
+    ctx.lineTo(100, 200);
+
+    ctx.stroke();
+
+    ctx.lineWidth = 1.0;
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.moveTo(200, 200);
+    ctx.arcTo(200, 300, 100, 200, 50);
+
+    ctx.stroke();
+
+};
+
+--
+
+
+=== 畫曲線 (curve)
+
+* 貝茲曲線(Bezier curve) 
++
+image::Canvas_curves.png[]
+
+* quadraticCurveTo(cp1x, cp1y, x, y)
++
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.beginPath();
+    ctx.moveTo(100, 200);
+    ctx.quadraticCurveTo(200, 300, 200, 200);
+
+    ctx.stroke();
+
+};
+
+--
+
+* bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
++
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.beginPath();
+    ctx.moveTo(100, 200);
+    ctx.bezierCurveTo(166, 300, 233, 100, 300, 200);
+
+    ctx.stroke();
+
+    // control point & line
+    var ctp1 = new Path2D();
+    ctp1.arc(200, 300, 2.5, 0 , 2*Math.PI);
+    ctx.fillStyle = 'red';
+    ctx.fill(ctp1);
+
+    var ctp2 = new Path2D();
+    ctp2.arc(166 ,300, 2.5, 0 , 2*Math.PI);
+    ctx.fillStyle = 'blue';
+    ctx.fill(ctp2);
+
+    var ctp3 = new Path2D();
+    ctp3.arc(233, 100, 2.5, 0 , 2*Math.PI);
+    ctx.fill(ctp3);
+
+    ctx.lineWidth = 0.2;
+    ctx.lineStyle = 'gray';
+    ctx.moveTo(100, 200);
+    ctx.lineTo(200, 300);
+    ctx.lineTo(300, 200);
+
+    ctx.moveTo(100, 200);
+    ctx.lineTo(166, 300);
+
+    ctx.moveTo(300, 200);
+    ctx.lineTo(233, 100);
+    ctx.stroke();
+
+};
+
+--
+
+
+=== 畫方 (rectangle)
+
+* rect(x, y, width, height)
++
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.beginPath();
+    ctx.rect(100,100,50,50);
+    ctx.stroke();
+
+};
+
+--
+
+=== 再搭配一些東西
+
+* 抓滑鼠座標
++
+[source, javascript]
+--
+window.onload = function(){
+
+    // 起始值
+    var mouse = {
+        x: innerWidth / 2,
+        y: innerHeight / 2
+    };
+
+    // 抓取滑鼠座標
+    window.onmousemove = function (event) {
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+    }
+
+};
+
+--
+
+* animation
++
+.small model of solar system.
+[source, javascript]
+--
+var sun = new Image();
+var moon = new Image();
+var earth = new Image();
+function init() {
+  sun.src = 'https://mdn.mozillademos.org/files/1456/Canvas_sun.png';
+  moon.src = 'https://mdn.mozillademos.org/files/1443/Canvas_moon.png';
+  earth.src = 'https://mdn.mozillademos.org/files/1429/Canvas_earth.png';
+  window.requestAnimationFrame(draw);
+}
+
+function draw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.clearRect(0, 0, 300, 300); // clear canvas
+
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.strokeStyle = 'rgba(0, 153, 255, 0.4)';
+  ctx.save();
+  ctx.translate(150, 150);
+
+  // Earth
+  var time = new Date();
+  ctx.rotate(((2 * Math.PI) / 60) * time.getSeconds() + ((2 * Math.PI) / 60000) * time.getMilliseconds());
+  ctx.translate(105, 0);
+  ctx.fillRect(0, -12, 40, 24); // Shadow
+  ctx.drawImage(earth, -12, -12);
+
+  // Moon
+  ctx.save();
+  ctx.rotate(((2 * Math.PI) / 6) * time.getSeconds() + ((2 * Math.PI) / 6000) * time.getMilliseconds());
+  ctx.translate(0, 28.5);
+  ctx.drawImage(moon, -3.5, -3.5);
+  ctx.restore();
+
+  ctx.restore();
+  
+  ctx.beginPath();
+  ctx.arc(150, 150, 105, 0, Math.PI * 2, false); // Earth orbit
+  ctx.stroke();
+ 
+  ctx.drawImage(sun, 0, 0, 300, 300);
+
+  window.requestAnimationFrame(draw);
+}
+
+init();
+--
+
+== Path2D
+* 一個canvas 上常常會畫上一連串的繪圖路徑，為了簡化程式碼還有改善效能，我們可以利用 Path2D 物件。
++
+[source, javascript]
+--
+window.onload = function(){
+
+    // step 1. 取得渲染環境 (Rendering Context)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // step 2. 開始畫
+    ctx.beginPath();
+    ctx.moveTo(300, 200);
+
+    ctx.arc(200,200,100,0,2*Math.PI);
+
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Path2D
+    var circle = new Path2D();
+    circle.moveTo(300,200);
+    circle.arc(200,200,100,0,2*Math.PI);
+
+    ctx.stroke(circle);
+
+    // SVG Paths
+    var p = new Path2D("M10 10 h 80 v 80 h -80 Z");
+    ctx.stroke(p);
+
+};
+
+--
+
+* API
+** new Path2D();     // 不傳入參數會回傳一個空的 Path2D 物件
+** new Path2D(path); // 複製傳入的 Path2D 物件，然後以之建立 Path2D 物件
+** new Path2D(d);    // 以傳入的 SVG 路徑建立 Path2D 物件
+
+* Path2D 物件還可以加入其他 Path2D 物件，這讓我們可以很方便的組合多個物件使用。 
+** Path2D.addPath(path [, transform])
+
+
+== Extension
+
+* Line styles
+* Fill and stroke styles(<color>)
+* d3.js
+
+== Reference
+
+* link:https://developer.mozilla.org/zh-TW/docs/Web/API/Canvas_API/Tutorial[ Canvas 教學文件 | MDN]
+* link:https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D[Canvas API]
