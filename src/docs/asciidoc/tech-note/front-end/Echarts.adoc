@@ -1,0 +1,132 @@
+= Echarts 
+劉育辰 <torr@tist.com.tw>
+v0.1, 2020-06-23
+:experimental:
+:icons: font
+:sectnums:
+:toc: left
+:toc-title: 大綱
+:sectanchors:
+:imagesdir: images/echarts/
+
+== 前言
+
+* link:https://echarts.apache.org/zh/index.html[官方網站]
+
+* 基本上 echarts 就根據你的option 畫出來的(廢話) 
+
+== Option
+
+* link:https://echarts.apache.org/zh/option.html[官方文件]
+
+=== 範例
+
+image::01.png[]
+
+[source, js]
+--
+option = {
+    color: ['#6C9BCB','#2C2383'], // <1>
+    title: {
+        left: 'left',
+        text: chartConfig.name  // string
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {        
+            type: 'shadow'
+        }
+    },
+    legend: {
+        top: '10%',
+        data: ['男人數','女人數'] // <2>
+    },
+    toolbox: {
+        feature: {
+            dataView: {
+                show: true,
+                readOnly: true,
+                title: '資料列表',
+                lang: [chartConfig.name, '回圖表', '刷新'],
+                optionToContent: function (opt) {
+                    return lineTable(opt);
+                }
+            },
+            saveAsImage: {
+                show: true,
+                title: '下載',
+                type: 'png'
+            }
+        }
+    },
+    grid: {
+        top: '30%',
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis: [
+        {
+            type: 'category',
+            data: ['92年','93年','94年','95年','96年','97年','98年','99年','100年','101年','102年','103年','104年','105年','106年','107年'] //<3>
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value'
+        }
+    ],
+    series: [ // <4>
+        {
+            name: '男人數',
+            type: 'bar',
+            data: [220, 182, 191, 234, 290]
+        },
+        {
+            name: '女人數',
+            type: 'bar',
+            data: [220, 182, 191, 234, 290]
+        },
+    ]
+};
+--
+
+=== series
+
+* type
+** 線: line
+*** 群組/ 堆疊
+
+** 長條: bar
+*** 群組/ 堆疊
+*** 瀑布/ 分布/ 甘特
+*** 長條折線
+*** 極座標
+
+** 圓餅: pie
+** 散點: scatter
+** 雷達: radar
+** 樹狀: tree
+
+=== tooltip
+
+提示框元件，包含提示框浮層和 axisPointer
+
+
+=== toolbox
+
+圖表工具，內建有: 
+
+* 存成圖片 (saveAsImage)
+* 數據視圖 (dataView)
+* 動態類型切換 (magicType)
+* 資料區域縮放 (dataZoom)
+* 重置 (restore)
+
+== Echarts 與 Maps 的結合
+
+
+== Reference
+
+* link:https://echarts.apache.org/zh/index.html[官方網站]
