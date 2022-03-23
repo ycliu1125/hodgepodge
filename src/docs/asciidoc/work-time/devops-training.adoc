@@ -1,0 +1,74 @@
+= DevOps 訓練筆記
+Torr.liu <torr.liu@mail.chungyo.net>
+v1.0, 2022-02-22
+:experimental:
+:sectnums: 
+:toc: left
+:toc-title: 大綱
+:imagesdir: ./images/devops
+
+== DevOps
+
+=== 簡介
+
+* 基本概念圖
++
+image::devops-cycle.png[Devops Cycle]
+
+* DevOps 主要有五個階段： +
+Continuous Planning: 指的是透過使用者回饋或者其他部門帶來的需求。 +
+Continuous Development: 指的是開發工程師持續的將需求完成，並完成建制。 +
+Continuous Testing: 指的是開發好的 Image 自動的進行測試。 +
+Continuous Integration: 將測試好的功能發版本並部屬上產品。 +
+Continuous Monitoring: 持續的監測產品營運的狀況，持續的提出優化的需求
+
+=== 技能樹
+image::roadmap.png[技能樹]
+
+== Docker
+
+== Docker Swarm
+
+== K3s
+
+=== 簡介
+
+* k3s 是輕量化的 k8s
+
+=== 架構及運作
+
+=== 與k8s比較
+
+== Kubernetes(k8s)
+
+=== 簡介
+* K8s 出現的主要目的是解決Continuous Integration、Continuous Monitoring的問題 +
+一般來說透過CI/CD 工具,當工程師Push Code 時,將自動的執行所有的測試,並觸發K8s 工具, +
+這使的程式碼可以更快速的反應在產品端。
+
+=== 架構及運作
+
+=== 操作
+
+
+== 網路元件
+
+=== DNS 
+
+=== Reverse Proxy
+
+=== Forward Proxy
+
+=== Caching Server
+
+=== Load Balancer
+
+=== Firewall
+
+
+
+== Reference 
+. https://ithelp.ithome.com.tw/users/20139235/ironman/4378[DevOps 好想學!新手也能打造雲端 Study Lab 系列]
+. https://bestsamina.github.io/posts/2019-10-10-k3s-intro-and-play/[邊緣運算之容器管理工具 - K3s 之介紹與玩耍]
+. https://www.modb.pro/db/161082[k8s vs k3s: 差异解析]
+. https://ithelp.ithome.com.tw/articles/10284398[K8s 在 DevOps 中的作用]
